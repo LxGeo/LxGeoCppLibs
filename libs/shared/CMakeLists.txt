@@ -1,11 +1,10 @@
-set(LIBRARY_OUTPUT_PATH ../../out/build/bin/)
-
-project(LxGeoFactoryShared LANGUAGES CXX)
+set(LIBRARY_OUTPUT_PATH ../out/${CMAKE_BUILD_TYPE})
+project(LxGeoFactoryShared)
 set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
 
-find_package(Boost REQUIRED COMPONENTS filesystem )
+find_package(Boost REQUIRED COMPONENTS filesystem log )
 if(Boost_FOUND)
-	set(Boost_USE_STATIC_LIBS OFF)
+	set(Boost_USE_STATIC_LIBS ON)
 	set(Boost_USE_MULTITHREAD OFF)
 	include_directories(${Boost_INCLUDE_DIRS})
 	link_directories(${Boost_LIBRARY_DIRS})
@@ -39,6 +38,13 @@ if (OpenMP_FOUND)
 else()
   message(STATUS "NOTICE: This exe uses OpenMP for better performances (not found).")
 endif()
+
+find_package(fmt CONFIG REQUIRED)
+if (fmt_FOUND)
+else()
+  message(STATUS "NOTICE: This exe requires fmt and will not be compiled.")
+endif()
+
 include_directories(include)
 add_definitions(-D_CONSOLE -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DLX_POLYGON_FACTORY_SHARED_EXPORTS)
 
@@ -52,5 +58,5 @@ add_library(LxGeoFactoryShared
 	SHARED
 	${LX_GEO_FACTORY_SHARED_SRC_FILES})
 	
-target_link_libraries(LxGeoFactoryShared  ${GDAL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${OpenCV_LIBS})
+target_link_libraries(LxGeoFactoryShared  ${GDAL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_LOG_LIBRARY} ${OpenCV_LIBS} fmt::fmt fmt::fmt-header-only)
 target_compile_options(LxGeoFactoryShared PRIVATE ${OpenMP_CXX_FLAGS})

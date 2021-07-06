@@ -7,7 +7,6 @@ namespace LxGeo
 
 	namespace LxGeoCommon
 	{
-
 		typedef OGRSpatialReference OGRSpatialReference;
 	}
 }

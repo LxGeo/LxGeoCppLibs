@@ -20,6 +20,15 @@ using namespace LxGeo::LxGeoCommon;
 using namespace LxGeo::GeometryFactoryShared;
 // move this to common
 typedef GDALDataset GDALDataset;
-typedef fmt fmt;
+
+template<typename T>
+T get_vector_by_indices(T& input_vector, std::vector<size_t>& indices_vector) {
+	T output_vector;
+	output_vector.reserve(indices_vector.size());
+	for (size_t c_index : indices_vector) {
+		output_vector.push_back(input_vector[c_index]);
+	}
+	return output_vector;
+}
 
 # define M_PI 3.14159265358979323846
