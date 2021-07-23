@@ -19,5 +19,7 @@ namespace LxGeo
 		typedef bgi::rtree<Boost_Value_2, bgi::quadratic<16> > Boost_RTree_2;
 		typedef bgi::rtree<Boost_Value_2, bgi::linear<16> > Boost_RTree_2_linear;
 		typedef bg::model::segment<Boost_Point_2> Boost_Segment_2;
+		typedef bg::model::linestring<Boost_Point_2> Boost_LineString_2;
+		typedef bg::model::polygon<Boost_Point_2> Boost_Polygon_2;
 	}
 }

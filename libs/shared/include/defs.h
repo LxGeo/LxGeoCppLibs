@@ -9,20 +9,20 @@
 #include <valarray>
 #include <string>
 #include <queue>
+#include <algorithm> 
 #include <boost/log/trivial.hpp>
 
 #include "defs_common.h"
 #include "defs_boost.h"
 #include "defs_opencv.h"
+#include "defs_cgal.h"
 #include <fmt/core.h>
 
 using namespace LxGeo::LxGeoCommon;
 using namespace LxGeo::GeometryFactoryShared;
-// move this to common
-typedef GDALDataset GDALDataset;
 
-template<typename T>
-T get_vector_by_indices(T& input_vector, std::vector<size_t>& indices_vector) {
+template<typename T, typename T2>
+T get_vector_by_indices(T& input_vector, T2& indices_vector) {
 	T output_vector;
 	output_vector.reserve(indices_vector.size());
 	for (size_t c_index : indices_vector) {
@@ -31,4 +31,17 @@ T get_vector_by_indices(T& input_vector, std::vector<size_t>& indices_vector) {
 	return output_vector;
 }
 
+template<typename T>
+int sign(T number) {
+	if (number < 0) return -1;
+	else if (number > 0) return 1;
+	else return 0;
+}
+
 # define M_PI 3.14159265358979323846
+
+#define	S_NO_ERROR 0
+#define	S_SPATIAL_REF_CONFLICT 1
+#define	S_WRONG_SHAPEFILE_PATH 2
+#define S_DIRECTORY_CREATION_ERROR 3
+#define	S_UNKNOWN_ERROR 4
