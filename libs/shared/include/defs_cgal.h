@@ -1,9 +1,11 @@
 #pragma once
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+//#include <CGAL/Exact_predicates_exact_constructions_kernel_with_sqrt.h>
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Polygon_with_holes_2.h>
-
+#include <CGAL/CORE_Expr.h>
+#include <CGAL/number_utils.h>
 #include <CGAL/Cartesian_converter.h>
 
 namespace LxGeo
@@ -12,6 +14,7 @@ namespace LxGeo
 	{
 		typedef CGAL::Exact_predicates_exact_constructions_kernel EK;
 		typedef CGAL::Lazy_exact_nt<CGAL::Gmpq> FT;
+		typedef CGAL::Lazy_exact_nt<CORE::Expr> CORE_Expr;
 
 		typedef EK::Point_2 Point_2;
 		typedef EK::Segment_2 Segment_2;

@@ -16,6 +16,7 @@
 #include "defs_boost.h"
 #include "defs_opencv.h"
 #include "defs_cgal.h"
+#include "geometry_lab.h"
 #include <fmt/core.h>
 
 using namespace LxGeo::LxGeoCommon;
@@ -36,6 +37,22 @@ int sign(T number) {
 	if (number < 0) return -1;
 	else if (number > 0) return 1;
 	else return 0;
+}
+
+namespace LxGeo
+{
+	namespace GeometryFactoryShared
+	{
+		int mod(int a, int b);
+	}
+}
+
+
+namespace Constants
+{
+	const double PI = 3.1415926535897832384626;
+	const double SQRT_2 = 1.414213562373095;
+	const double PREC = 1.0 / (1 << 30) / (1 << 10);
 }
 
 # define M_PI 3.14159265358979323846
