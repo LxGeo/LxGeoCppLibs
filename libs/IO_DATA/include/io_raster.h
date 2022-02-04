@@ -32,7 +32,10 @@ namespace LxGeo
 				raster_Y_size = copy_raster.raster_Y_size;
 				raster_size = copy_raster.raster_size;
 				band_count = copy_raster.band_count;
-				spatial_refrence = copy_raster.spatial_refrence->Clone();
+				if (copy_raster.spatial_refrence)
+					spatial_refrence = copy_raster.spatial_refrence->Clone();
+				else
+					spatial_refrence = nullptr;
 				for (size_t cpy_idx = 0; cpy_idx < 6; ++cpy_idx) geotransform[cpy_idx] = copy_raster.geotransform[cpy_idx];
 				raster_data_type = copy_raster.raster_data_type;
 				raster_data = matrix(copy_raster.raster_data);

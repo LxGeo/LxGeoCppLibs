@@ -2,6 +2,15 @@ set(LIBRARY_OUTPUT_PATH ../out/${CMAKE_BUILD_TYPE})
 project(IO_DATA LANGUAGES CXX)
 set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
 
+if(DEFINED FORCE_STATIC )
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+	add_definitions(-DIO_DATA_STATIC -DLXGEO_FACTORY_STATIC)
+else()
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+endif()
+
 find_package(Boost REQUIRED COMPONENTS filesystem log)
 if(Boost_FOUND)
 	set(Boost_USE_STATIC_LIBS ON)
@@ -47,17 +56,23 @@ endif()
 
 include_directories(include)
 include_directories(../shared/include)
-add_definitions(-D_CONSOLE -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DLX_KINETIC2_EXPORTS)
+add_definitions(-D_CONSOLE -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS)
 
 file(GLOB_RECURSE 
 	IO_DATA_SRC_FILES 
 	src/* 
 	include/*)
 
-
-add_library(IO_DATA 
+if(DEFINED FORCE_STATIC )
+    add_library(IO_DATA 
+	STATIC
+	${IO_DATA_SRC_FILES})
+else()
+    add_library(IO_DATA 
 	SHARED
 	${IO_DATA_SRC_FILES})
+endif()
+
 
 add_dependencies(${PROJECT_NAME} LxGeoFactoryShared)
 

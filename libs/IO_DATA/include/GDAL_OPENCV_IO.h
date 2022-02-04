@@ -43,4 +43,4 @@ private:
 };
 
 
-IO_DATA_API extern KGDAL2CV* kgdal2cv;
+//IO_DATA_API extern KGDAL2CV* kgdal2cv;
