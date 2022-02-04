@@ -2,6 +2,15 @@ set(LIBRARY_OUTPUT_PATH ../out/${CMAKE_BUILD_TYPE})
 project(LxGeoFactoryShared)
 set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
 
+if(DEFINED FORCE_STATIC )
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+	add_definitions(-DLXGEO_FACTORY_SHARED_EXPORTS -DLXGEO_FACTORY_STATIC)
+else()
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+endif()
+
 find_package(Boost REQUIRED COMPONENTS filesystem log )
 if(Boost_FOUND)
 	set(Boost_USE_STATIC_LIBS ON)
@@ -46,7 +55,7 @@ else()
 endif()
 
 include_directories(include)
-add_definitions(-D_CONSOLE -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DLX_POLYGON_FACTORY_SHARED_EXPORTS)
+add_definitions(-D_CONSOLE -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS)
 
 
 file(GLOB_RECURSE 
@@ -54,9 +63,16 @@ file(GLOB_RECURSE
 	src/* 
 	include/*)
 
-add_library(LxGeoFactoryShared 
+if(DEFINED FORCE_STATIC )
+    add_library(LxGeoFactoryShared 
+	STATIC
+	${LX_GEO_FACTORY_SHARED_SRC_FILES})
+else()
+    add_library(LxGeoFactoryShared 
 	SHARED
 	${LX_GEO_FACTORY_SHARED_SRC_FILES})
+endif()
+
 	
 target_link_libraries(LxGeoFactoryShared  ${GDAL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_LOG_LIBRARY} ${OpenCV_LIBS} fmt::fmt fmt::fmt-header-only)
 target_compile_options(LxGeoFactoryShared PRIVATE ${OpenMP_CXX_FLAGS})
