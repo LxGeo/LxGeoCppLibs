@@ -18,6 +18,7 @@
 #include "defs_cgal.h"
 #include "geometry_lab.h"
 #include <fmt/core.h>
+#include "tqdm/tqdm.h"
 
 using namespace LxGeo::LxGeoCommon;
 using namespace LxGeo::GeometryFactoryShared;

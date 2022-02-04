@@ -1,5 +1,6 @@
 #include "defs.h"
 #include "defs_cgal.h"
+#include "defs_boost.h"
 #include "defs_common.h"
 #include "export_shared.h"
 
@@ -55,6 +56,15 @@ namespace LxGeo
 			return aux_ogr_ring;
 		}
 
+		double angle3p(const Boost_Point_2& p_m, const Boost_Point_2& p_0, const Boost_Point_2& p_1) {
+			
+			double m0x = p_0.get<0>() - p_m.get<0>(), m0y = p_0.get<1>() - p_m.get<1>(),
+				m1x = p_1.get<0>() - p_m.get<0>(), m1y = p_1.get<1>() - p_m.get<1>();
+
+			double angleRadians = atan2(m0x * m1x + m0y * m1y, m0y * m1x - m0x * m1y);
+			angleRadians = std::fmod(angleRadians + M_PI, M_PI);
+			return angleRadians;
+		}
 	}
 }
 

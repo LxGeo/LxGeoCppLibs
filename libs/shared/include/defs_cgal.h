@@ -7,13 +7,14 @@
 #include <CGAL/CORE_Expr.h>
 #include <CGAL/number_utils.h>
 #include <CGAL/Cartesian_converter.h>
-
+#include <CGAL/Quadtree.h>
+#include <boost/multiprecision/gmp.hpp>
 namespace LxGeo
 {
 	namespace GeometryFactoryShared
 	{
 		typedef CGAL::Exact_predicates_exact_constructions_kernel EK;
-		typedef CGAL::Lazy_exact_nt<CGAL::Gmpq> FT;
+		typedef CGAL::Lazy_exact_nt<boost::multiprecision::mpq_rational> FT;
 		typedef CGAL::Lazy_exact_nt<CORE::Expr> CORE_Expr;
 
 		typedef EK::Point_2 Point_2;
@@ -35,6 +36,8 @@ namespace LxGeo
 		typedef CGAL::Polygon_2<IK> Inexact_Polygon_2;
 
 		typedef CGAL::Bbox_2 Bbox_2;
+
+		typedef CGAL::Quadtree<IK, std::vector<Inexact_Point_2>> Quadtree;
 
 		typedef CGAL::Cartesian_converter<IK, EK> IK_to_EK;
 		typedef CGAL::Cartesian_converter<EK, IK> EK_to_IK;
