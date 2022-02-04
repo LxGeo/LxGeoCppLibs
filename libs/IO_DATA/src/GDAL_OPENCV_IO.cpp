@@ -1084,7 +1084,7 @@ void KGDAL2CV::Close()
 KGDAL2CV::KGDAL2CV() : m_dataset(nullptr), m_filename(""), m_driver(nullptr), hasColorTable(false), m_width(0), m_height(0), m_type(-1), m_nBand(0)
 {
 	GDALAllRegister();
-	CPLSetConfigOption("GDAL_FILENAME_IS_UTF8", "NO");
+	//CPLSetConfigOption("GDAL_FILENAME_IS_UTF8", "NO");
 }
 
 KGDAL2CV::~KGDAL2CV()
@@ -1092,4 +1092,4 @@ KGDAL2CV::~KGDAL2CV()
 	Close();
 }
 
-IO_DATA_API KGDAL2CV* kgdal2cv = nullptr;
+IO_DATA_API KGDAL2CV* kgdal2cv;

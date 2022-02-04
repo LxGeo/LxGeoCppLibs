@@ -8,6 +8,7 @@ namespace LxGeo
 
 	namespace IO_DATA
 	{
+		KGDAL2CV* kgdal2cv;
 		bool RasterIO::load_raster(std::string raster_path, GDALAccess read_mode, bool lazy_load) {
 			raster_dataset = (GDALDataset*)GDALOpen(raster_path.c_str(), read_mode);
 			if (raster_dataset == NULL)
@@ -19,7 +20,7 @@ namespace LxGeo
 			raster_Y_size = raster_dataset->GetRasterYSize();
 			raster_size = raster_X_size * raster_Y_size;
 			band_count = raster_dataset->GetRasterCount();
-			spatial_refrence = raster_dataset->GetSpatialRef()->Clone();
+			if (raster_dataset->GetSpatialRef()) spatial_refrence = raster_dataset->GetSpatialRef()->Clone();
 			raster_dataset->GetGeoTransform(geotransform);
 			raster_data_type = raster_dataset->GetRasterBand(1)->GetRasterDataType();
 
@@ -52,8 +53,9 @@ namespace LxGeo
 			GDALDriver* tiff_driver = GetGDALDriverManager()->GetDriverByName("GTiff");
 			GDALDataType out_data_type = kgdal2cv->opencv2gdal(raster_data.type());
 			GDALDataset* new_dataset = tiff_driver->Create(raster_path.c_str(), raster_X_size, raster_Y_size, band_count, out_data_type, NULL);
-			new_dataset->SetSpatialRef(spatial_refrence);
-			new_dataset->SetGeoTransform(geotransform);
+			if (new_dataset == NULL) { throw std::exception(fmt::format("Cannot create copy dataset at {}", raster_path).c_str()); }
+			if (spatial_refrence) new_dataset->SetSpatialRef(spatial_refrence);
+			if (geotransform) new_dataset->SetGeoTransform(geotransform);
 			return new_dataset;
 		}
 	}
