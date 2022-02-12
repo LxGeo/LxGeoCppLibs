@@ -56,6 +56,36 @@ namespace LxGeo
 			return aux_ogr_ring;
 		}
 
+		Boost_Polygon_2 transform_OGR2B_Polygon(OGRPolygon* ogr_polygon) {
+			Boost_Polygon_2 aux_boost_polygon;
+
+			// fill exterior
+			OGRLinearRing* exterior_ring = ogr_polygon->getExteriorRing();
+			for (size_t v_idx = 0; v_idx < exterior_ring->getNumPoints(); ++v_idx) {
+				OGRPoint pt;
+				exterior_ring->getPoint(v_idx, &pt);
+				double x = pt.getX(), y = pt.getY();
+				aux_boost_polygon.outer().push_back(Boost_Point_2(x, y));
+			}
+			// fill interior
+			for (size_t int_ring_idx = 0; int_ring_idx < ogr_polygon->getNumInteriorRings(); ++int_ring_idx) {
+				OGRLinearRing* c_int_ring = ogr_polygon->getInteriorRing(int_ring_idx);
+				Boost_Ring_2 R;
+				int ring_size = c_int_ring->getNumPoints();
+				R.reserve(ring_size);
+				for (int u = 0; u < ring_size; ++u) { //-1
+					OGRPoint pt;
+					c_int_ring->getPoint(u, &pt);
+					double x = pt.getX(), y = pt.getY();
+					//CT->Transform(1, &x, &y);
+					R.push_back(Boost_Point_2(x, y));
+				}
+				aux_boost_polygon.inners().push_back(R);
+			}
+			return aux_boost_polygon;
+
+		}
+
 		double angle3p(const Boost_Point_2& p_m, const Boost_Point_2& p_0, const Boost_Point_2& p_1) {
 			
 			double m0x = p_0.get<0>() - p_m.get<0>(), m0y = p_0.get<1>() - p_m.get<1>(),

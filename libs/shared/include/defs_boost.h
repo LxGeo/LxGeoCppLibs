@@ -20,6 +20,7 @@ namespace LxGeo
 		typedef bgi::rtree<Boost_Value_2, bgi::linear<16> > Boost_RTree_2_linear;
 		typedef bg::model::segment<Boost_Point_2> Boost_Segment_2;
 		typedef bg::model::linestring<Boost_Point_2> Boost_LineString_2;
+		typedef bg::model::ring<Boost_Point_2> Boost_Ring_2;
 		typedef bg::model::polygon<Boost_Point_2> Boost_Polygon_2;
 
 		LX_GEO_FACTORY_SHARED_API double angle3p(const Boost_Point_2& p_m, const Boost_Point_2& p_0, const Boost_Point_2& p_1);
