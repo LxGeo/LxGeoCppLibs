@@ -8,6 +8,25 @@ namespace LxGeo
 
 	namespace IO_DATA
 	{
+
+		enum RasterCompFlags
+		{
+			m_pixelSize = 1 << 0,
+			raster_size = 1 << 1,
+			band_count = 1 << 2,
+			spatial_refrence = 1 << 3,
+			raster_data_type = 1 << 4,
+			raster_X_size = 1 << 5,
+			raster_Y_size = 1 << 6,
+			geotransform = 1 << 7,
+			ALL = m_pixelSize | raster_size | band_count | spatial_refrence | raster_data_type | raster_X_size | raster_Y_size | geotransform
+		};
+
+		inline RasterCompFlags operator|(RasterCompFlags a, RasterCompFlags b)
+		{
+			return static_cast<RasterCompFlags>(static_cast<int>(a) | static_cast<int>(b));
+		}
+
 		class RasterIO
 		{
 
@@ -47,6 +66,68 @@ namespace LxGeo
 					raster_data = copy_raster_data;
 				else
 					throw std::runtime_error("RasterIO creation failed! matrix and raster size are different!");
+			}
+
+			IO_DATA_API bool compare(RasterIO& target_raster, int flags = RasterCompFlags::ALL, int except_flags =0 ) {
+				
+				flags = flags & ~except_flags;
+				// iterate through members || flags == 0 => all members
+				if (flags | RasterCompFlags::m_pixelSize) {
+					if (target_raster.m_pixelSize != m_pixelSize) {
+						std::cout << "Rasters pxel sizes doesn't match" << std::endl;
+						return false;
+					}
+				}
+
+				if ( flags | RasterCompFlags::raster_size) {
+					if (target_raster.raster_size != raster_size) {
+						std::cout << "Rasters sizes doesn't match" << std::endl;
+						return false;
+					}
+				}
+
+				if (flags | RasterCompFlags::band_count) {
+					if (target_raster.band_count != band_count) {
+						std::cout << "Rasters band count doesn't match" << std::endl;
+						return false;
+					}
+				}
+
+				if ( flags | RasterCompFlags::spatial_refrence) {
+					if (target_raster.spatial_refrence->IsSame(spatial_refrence)) {
+						std::cout << "Rasters spatial refrence doesn't match" << std::endl;
+						return false;
+					}
+				}
+
+				if ( flags | RasterCompFlags::raster_data_type) {
+					if (target_raster.raster_data_type != raster_data_type) {
+						std::cout << "Rasters data type doesn't match" << std::endl;
+						return false;
+					}
+				}
+
+				if (flags | RasterCompFlags::raster_X_size) {
+					if (target_raster.raster_X_size != raster_X_size) {
+						std::cout << "Rasters X size doesn't match" << std::endl;
+						return false;
+					}
+				}
+
+				if ( flags | RasterCompFlags::raster_Y_size) {
+					if (target_raster.raster_Y_size != raster_Y_size) {
+						std::cout << "Rasters Y size doesn't match" << std::endl;
+						return false;
+					}
+				}
+
+				if (flags | RasterCompFlags::geotransform) {
+					if (std::equal(std::begin(target_raster.geotransform), std::end(target_raster.geotransform), std::begin(geotransform))){
+						std::cout << "Rasters geotransform doesn't match" << std::endl;
+						return false;
+					}
+				}
+				return true;
 			}
 
 			IO_DATA_API void close() {
