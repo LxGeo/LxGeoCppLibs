@@ -2,6 +2,7 @@
 #include "defs.h"
 #include "export_io_data.h"
 #include "GDAL_OPENCV_IO.h"
+#include "coords.h"
 
 namespace LxGeo
 {
@@ -42,6 +43,10 @@ namespace LxGeo
 				raster_data_type = GDT_Unknown;
 				raster_data = matrix();
 				raster_dataset = NULL;
+			};
+
+			IO_DATA_API RasterIO(std::string raster_path, GDALAccess read_mode = GA_ReadOnly, bool lazy_load = true): RasterIO() {				
+				load_raster(raster_path, read_mode = read_mode, lazy_load = lazy_load);
 			};
 
 			IO_DATA_API RasterIO(RasterIO& copy_raster) {
@@ -156,6 +161,48 @@ namespace LxGeo
 			IO_DATA_API void write_raster(std::string raster_path, bool force_write);
 
 			GDALDataset* create_copy_dataset(std::string raster_path);
+
+			void _calc_pixel_coords(const double& sc_x, const double& sc_y, size_t& px_col, size_t& px_row) {
+				double& px = geotransform[0];
+				double& py = geotransform[3];
+				double& rx = geotransform[1];
+				double& ry = geotransform[5];
+				px_col = static_cast<size_t>((sc_x - px) / rx);
+				px_row = static_cast<size_t>((sc_y - py) / ry);
+			}
+
+			IO_DATA_API PixelCoords get_pixel_coords(SpatialCoords& sp) {
+				
+				PixelCoords result_coords;
+				_calc_pixel_coords(sp.xc, sp.yc, result_coords.col, result_coords.row);
+				return result_coords;
+			}
+
+			IO_DATA_API PixelCoords get_pixel_coords(Boost_Point_2& sp) {
+
+				PixelCoords result_coords;
+				_calc_pixel_coords(sp.get<0>(), sp.get<1>(), result_coords.col, result_coords.row);
+				return result_coords;
+			}
+			
+			void _calc_spatial_coords(const size_t& px_col, const size_t& px_row, double& sc_x, double& sc_y) {
+				double& px = geotransform[0];
+				double& py = geotransform[3];
+				double& rx = geotransform[1];
+				double& ry = geotransform[5];
+				sc_x = px_col * rx + px;
+				sc_y = px_row * ry + py;
+			}
+
+			IO_DATA_API SpatialCoords get_spatial_coords(PixelCoords& pc) {
+				SpatialCoords result_coords;
+				double& px = geotransform[0];
+				double& py = geotransform[3];
+				double& rx = geotransform[1];
+				double& ry = geotransform[5];
+				_calc_spatial_coords(pc.col, pc.row, result_coords.xc, result_coords.yc);				
+				return result_coords;
+			}
 
 
 		public:
