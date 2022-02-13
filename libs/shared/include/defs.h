@@ -9,7 +9,7 @@
 #include <valarray>
 #include <string>
 #include <queue>
-#include <algorithm> 
+#include <algorithm>
 #include <boost/log/trivial.hpp>
 
 #include "defs_common.h"
@@ -19,6 +19,7 @@
 #include "geometry_lab.h"
 #include <fmt/core.h>
 #include "tqdm/tqdm.h"
+#include "coords.h"
 
 using namespace LxGeo::LxGeoCommon;
 using namespace LxGeo::GeometryFactoryShared;
@@ -54,6 +55,7 @@ namespace Constants
 	const double PI = 3.1415926535897832384626;
 	const double SQRT_2 = 1.414213562373095;
 	const double PREC = 1.0 / (1 << 30) / (1 << 10);
+	const size_t MEAN_PTS_PER_POLYGON = 7;
 }
 
 # define M_PI 3.14159265358979323846
