@@ -163,7 +163,7 @@ namespace LxGeo
 				return loaded_polygons;
 			}
 
-			IO_DATA_API void ShapefileIO<geometry_type>::write_shapefile() {
+			IO_DATA_API void ShapefileIO::write_shapefile() {
 				assert(geom_type == geometry_type && "Geometry type issues!");
 				//transform geometries_container to Geometries_with_attributes container
 				throw std::exception("Not implemented yet!");
@@ -269,7 +269,11 @@ namespace LxGeo
 				P_ref.get_list_of_int_attributes(int_attributes);
 				P_ref.get_list_of_double_attributes(double_attributes);
 				P_ref.get_list_of_string_attributes(string_attributes);
-				create_layer_attributes(int_attributes, double_attributes, string_attributes);
+				bool layer_created_success = create_layer_attributes(int_attributes, double_attributes, string_attributes);
+				if (!layer_created_success) {
+					std::cout << "Error creating out layer!\n";
+					throw std::exception("Layer creation error!");
+				}
 
 				for (size_t i = 0; i < polygon_container.size(); ++i) {
 					Polygon_with_attributes& p = polygon_container[i];
