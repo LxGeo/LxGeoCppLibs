@@ -35,6 +35,18 @@ namespace LxGeo
 			std::map<std::string, int> int_attributes;
 			std::map<std::string, std::string> string_attributes;
 		};
+
+		template <typename geometry_type>
+		std::vector<Geometries_with_attributes<geometry_type>> transform_to_geom_with_attr(std::vector<geometry_type>& in_geoms) {
+
+			std::vector<Geometries_with_attributes<geometry_type>> geoms_with_attrs; geoms_with_attrs.reserve(in_geoms.size());
+
+			std::transform(in_geoms.begin(), in_geoms.end(), std::back_inserter(geoms_with_attrs),
+				[](geometry_type& in_geom)->Geometries_with_attributes<geometry_type> {Geometries_with_attributes<geometry_type> out_geom_with_attr(in_geom);
+			return out_geom_with_attr; });
+
+			return geoms_with_attrs;
+		}
 	}
 }
 
