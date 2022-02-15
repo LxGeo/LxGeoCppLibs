@@ -132,6 +132,7 @@ namespace LxGeo
 
 			out_polygon.addRing(&ogr_ext_ring);
 			for (OGRLinearRing ring : ogr_int_rings) out_polygon.addRing(&ring);
+			return out_polygon;
 		}
 
 		OGRLineString transform_B2OGR_LineString(Boost_LineString_2& in_linestring) {
