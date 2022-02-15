@@ -24,5 +24,7 @@ namespace LxGeo
 		typedef bg::model::polygon<Boost_Point_2> Boost_Polygon_2;
 
 		LX_GEO_FACTORY_SHARED_API double angle3p(const Boost_Point_2& p_m, const Boost_Point_2& p_0, const Boost_Point_2& p_1);
+
+		LX_GEO_FACTORY_SHARED_API Boost_Box_2 box_buffer(Boost_Box_2& in_box, double buff);
 	}
 }

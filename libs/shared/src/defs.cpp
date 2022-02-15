@@ -95,6 +95,51 @@ namespace LxGeo
 			angleRadians = std::fmod(angleRadians + M_PI, M_PI);
 			return angleRadians;
 		}
+
+		Boost_Box_2 box_buffer(Boost_Box_2& in_box, double buff) {
+			Boost_Box_2 out_box;
+			out_box.min_corner().set<0>(in_box.min_corner().get<0>() - buff);
+			out_box.min_corner().set<1>(in_box.min_corner().get<1>() - buff);
+			out_box.max_corner().set<0>(in_box.max_corner().get<0>() + buff);
+			out_box.max_corner().set<1>(in_box.max_corner().get<1>() + buff);
+			return out_box;
+		}
+
+		OGRPoint transform_B2OGR_Point(Boost_Point_2& in_point) {
+			return OGRPoint(in_point.get<0>(), in_point.get<1>());
+		}
+
+		OGRLinearRing transform_B2OGR_Ring(Boost_Ring_2& in_ring) {
+			OGRLinearRing ogr_ring;
+			for (Boost_Point_2& c_pt : in_ring) {
+				ogr_ring.addPoint(&transform_B2OGR_Point(c_pt));
+			}
+			return ogr_ring;
+		}
+
+		OGRPolygon transform_B2OGR_Polygon(Boost_Polygon_2& in_polygon) {
+
+			OGRPolygon out_polygon;						
+
+			if (in_polygon.outer().empty()) return out_polygon;
+
+			OGRLinearRing ogr_ext_ring = transform_B2OGR_Ring(in_polygon.outer());
+
+			std::list<OGRLinearRing> ogr_int_rings;
+			for (auto& c_int_ring : in_polygon.inners()) {
+				ogr_int_rings.push_back(transform_B2OGR_Ring(c_int_ring));
+			}
+
+			out_polygon.addRing(&ogr_ext_ring);
+			for (OGRLinearRing ring : ogr_int_rings) out_polygon.addRing(&ring);
+		}
+
+		OGRLineString transform_B2OGR_LineString(Boost_LineString_2& in_linestring) {
+			OGRLineString out_linestring;
+			for (auto& c_pt : in_linestring) out_linestring.addPoint(&transform_B2OGR_Point(c_pt));
+			return out_linestring;
+		}
+
 	}
 }
 

@@ -22,7 +22,15 @@ namespace LxGeo
 
 		LX_GEO_FACTORY_SHARED_API OGRLinearRing container_transform_vector_Points2OGRRING(const std::vector<Inexact_Point_2>& input_vector);
 
+		LX_GEO_FACTORY_SHARED_API OGRPoint transform_B2OGR_Point(Boost_Point_2& in_point);
+
+		LX_GEO_FACTORY_SHARED_API OGRLinearRing transform_B2OGR_Ring(Boost_Ring_2& in_ring);
+
 		LX_GEO_FACTORY_SHARED_API Boost_Polygon_2 transform_OGR2B_Polygon(OGRPolygon* ogr_polygon);
+
+		LX_GEO_FACTORY_SHARED_API OGRPolygon transform_B2OGR_Polygon(Boost_Polygon_2& in_polygon);
+
+		LX_GEO_FACTORY_SHARED_API OGRLineString transform_B2OGR_LineString(Boost_LineString_2& in_linestring);
 
 	}
 }
