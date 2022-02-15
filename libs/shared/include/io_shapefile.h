@@ -1,6 +1,10 @@
 #pragma once
 #include "defs.h"
 #include "export_io_data.h"
+#include "geometries_with_attributes/geometries_with_attributes.h"
+#include "geometries_with_attributes/point_with_attribute.h"
+#include "geometries_with_attributes/linestring_with_attributes.h"
+#include "geometries_with_attributes/polygon_with_attributes.h"
 
 namespace LxGeo
 {
@@ -20,6 +24,66 @@ namespace LxGeo
 				geometries_container = std::vector<geometry_type>();
 			};
 
+			IO_DATA_API ShapefileIO(std::string& out_path, OGRSpatialReference* copy_srs):ShapefileIO(){								
+				
+				try {
+					const std::string driver_name = "ESRI Shapefile";
+
+					GDALDriver* driver = GetGDALDriverManager()->GetDriverByName(driver_name.c_str());
+					if (driver == NULL) {
+						throw std::logic_error("Error : ESRI Shapefile driver not available.");
+					}
+
+					// Step 1.
+					// Writes target file
+
+					vector_dataset = driver->Create(out_path.c_str(), 0, 0, 0, GDT_Unknown, NULL);
+					if (vector_dataset == NULL) {
+						throw std::logic_error("Error : creation of output file failed.");
+					}
+				}
+				catch (std::exception& e) {
+					std::cout << e.what() << std::endl;
+				}
+				if (vector_dataset == NULL) return;
+				
+				if (copy_srs)
+					spatial_refrence = copy_srs->Clone();
+				else
+					spatial_refrence = nullptr;
+
+				//create_layer();
+			}
+
+			IO_DATA_API ~ShapefileIO() {
+				if (vector_dataset != NULL) GDALClose(vector_dataset);
+			}
+
+			IO_DATA_API virtual bool ShapefileIO::create_layer() =0;
+
+			IO_DATA_API bool ShapefileIO<geometry_type>::create_layer_attributes(std::list<std::string>& int_attributes,
+				std::list<std::string>& double_attributes,
+				std::list<std::string>& string_attributes
+			) {
+				for (const std::string& name : int_attributes) {
+					OGRFieldDefn o_field(name.c_str(), OFTInteger);
+					if (vector_layer->CreateField(&o_field) != OGRERR_NONE) {
+						throw std::logic_error("Error : field creation failed.");
+					}
+				}
+				for (const std::string& name : double_attributes) {
+					OGRFieldDefn o_field(name.c_str(), OFTReal);
+					if (vector_layer->CreateField(&o_field) != OGRERR_NONE) {
+						throw std::logic_error("Error : field creation failed.");
+					}
+				}
+				for (const std::string& name : string_attributes) {
+					OGRFieldDefn o_field(name.c_str(), OFTString);
+					if (vector_layer->CreateField(&o_field) != OGRERR_NONE) {
+						throw std::logic_error("Error : field creation failed.");
+					}
+				}
+			}
 			
 			IO_DATA_API bool ShapefileIO<geometry_type>::load_shapefile(std::string shapefile_path, bool lazy_load) {
 
@@ -67,7 +131,7 @@ namespace LxGeo
 				return true;
 			}
 
-			IO_DATA_API virtual void ShapefileIO::load_geometries() {};
+			IO_DATA_API virtual void ShapefileIO::load_geometries() =0;
 
 			IO_DATA_API std::vector<Boost_Point_2> ShapefileIO::fill_point_container() {
 				std::vector<Boost_Point_2> loaded_points;
@@ -99,6 +163,142 @@ namespace LxGeo
 				return loaded_polygons;
 			}
 
+			IO_DATA_API void ShapefileIO<geometry_type>::write_shapefile() {
+				assert(geom_type == geometry_type && "Geometry type issues!");
+				//transform geometries_container to Geometries_with_attributes container
+				throw std::exception("Not implemented yet!");
+				std::vector<Geometries_with_attributes<geometry_type>> transformed;
+				write_shapefile(transformed);
+			}
+
+			//IO_DATA_API virtual void ShapefileIO::write_shapefile(std::vector<Geometries_with_attributes<geometry_type>>& geometries_container);
+
+			IO_DATA_API void ShapefileIO::write_point_shapefile(std::vector<Point_with_attributes>& pts_container) {
+				if (pts_container.empty()) {
+					std::cout << "Warning : empty vector of point. No output written." << std::endl;
+					return;
+				}
+
+				Point_with_attributes pt_ref = pts_container[0];
+				std::list<std::string> int_attributes, double_attributes, string_attributes;
+				pt_ref.get_list_of_int_attributes(int_attributes);
+				pt_ref.get_list_of_double_attributes(double_attributes);
+				pt_ref.get_list_of_string_attributes(string_attributes);
+				create_layer_attributes(int_attributes, double_attributes, string_attributes);
+
+				for (size_t i = 0; i < pts_container.size(); ++i) {
+					Point_with_attributes& p = pts_container[i];
+					OGRPoint ogr_point = transform_B2OGR_Point(p.get_definition());
+
+					OGRFeature* feature;
+					feature = OGRFeature::CreateFeature(vector_layer->GetLayerDefn());
+
+					feature->SetGeometry(&ogr_point);
+					for (const std::string& name : int_attributes) {
+						int x = p.get_int_attribute(name);
+						feature->SetField(name.c_str(), x);
+					}
+					for (const std::string& name : double_attributes) {
+						double x = p.get_double_attribute(name);
+						feature->SetField(name.c_str(), x);
+					}
+					for (const std::string& name : string_attributes) {
+						std::string x = p.get_string_attribute(name);
+						feature->SetField(name.c_str(), x.c_str());
+					}
+
+					// Writes new feature
+					OGRErr error = vector_layer->CreateFeature(feature);
+					if (error != OGRERR_NONE) std::cout << "Error code : " << int(error) << std::endl;
+					OGRFeature::DestroyFeature(feature);
+				}
+			};
+
+			IO_DATA_API void ShapefileIO::write_linestring_shapefile(std::vector<LineString_with_attributes>& linestring_container) {
+				
+				if (linestring_container.empty()) {
+					std::cout << "Warning : empty vector of linestrings. No output written." << std::endl;
+					return;
+				}
+
+				LineString_with_attributes L_ref = linestring_container[0];
+				std::list<std::string> int_attributes, double_attributes, string_attributes;
+				L_ref.get_list_of_int_attributes(int_attributes);
+				L_ref.get_list_of_double_attributes(double_attributes);
+				L_ref.get_list_of_string_attributes(string_attributes);
+				create_layer_attributes(int_attributes, double_attributes, string_attributes);
+
+				for (size_t i = 0; i < linestring_container.size(); ++i) {
+					LineString_with_attributes& l = linestring_container[i];
+					OGRLineString ogr_linestring = transform_B2OGR_LineString(l.get_definition());
+
+					OGRFeature* feature;
+					feature = OGRFeature::CreateFeature(vector_layer->GetLayerDefn());
+
+					feature->SetGeometry(&ogr_linestring);
+					for (const std::string& name : int_attributes) {
+						int x = l.get_int_attribute(name);
+						feature->SetField(name.c_str(), x);
+					}
+					for (const std::string& name : double_attributes) {
+						double x = l.get_double_attribute(name);
+						feature->SetField(name.c_str(), x);
+					}
+					for (const std::string& name : string_attributes) {
+						std::string x = l.get_string_attribute(name);
+						feature->SetField(name.c_str(), x.c_str());
+					}
+
+					// Writes new feature
+					OGRErr error = vector_layer->CreateFeature(feature);
+					if (error != OGRERR_NONE) std::cout << "Error code : " << int(error) << std::endl;
+					OGRFeature::DestroyFeature(feature);
+				}
+				vector_layer->SyncToDisk();
+
+			};
+
+			IO_DATA_API void ShapefileIO::write_polygon_shapefile(std::vector<Polygon_with_attributes>& polygon_container) {
+				if (polygon_container.empty()) {
+					std::cout << "Warning : empty vector of linestrings. No output written." << std::endl;
+					return;
+				}
+
+				Polygon_with_attributes P_ref = polygon_container[0];
+				std::list<std::string> int_attributes, double_attributes, string_attributes;
+				P_ref.get_list_of_int_attributes(int_attributes);
+				P_ref.get_list_of_double_attributes(double_attributes);
+				P_ref.get_list_of_string_attributes(string_attributes);
+				create_layer_attributes(int_attributes, double_attributes, string_attributes);
+
+				for (size_t i = 0; i < polygon_container.size(); ++i) {
+					Polygon_with_attributes& p = polygon_container[i];
+					OGRPolygon ogr_polygon = transform_B2OGR_Polygon(p.get_definition());
+
+					OGRFeature* feature;
+					feature = OGRFeature::CreateFeature(vector_layer->GetLayerDefn());
+
+					feature->SetGeometry(&ogr_polygon);
+					for (const std::string& name : int_attributes) {
+						int x = p.get_int_attribute(name);
+						feature->SetField(name.c_str(), x);
+					}
+
+					for (const std::string& name : double_attributes) {
+						double x = p.get_double_attribute(name);
+						feature->SetField(name.c_str(), x);
+					}
+					for (const std::string& name : string_attributes) {
+						std::string x = p.get_string_attribute(name);
+						feature->SetField(name.c_str(), x.c_str());
+					}
+
+					// Writes new feature
+					OGRErr error = vector_layer->CreateFeature(feature);
+					if (error != OGRERR_NONE) std::cout << "Error code : " << int(error) << std::endl;
+					OGRFeature::DestroyFeature(feature);
+				}
+			};
 			
 
 		public:
@@ -114,26 +314,89 @@ namespace LxGeo
 
 		class PolygonsShapfileIO : public ShapefileIO<Boost_Polygon_2> {
 			public:
-				IO_DATA_API void PolygonsShapfileIO::load_geometries() {
+				IO_DATA_API PolygonsShapfileIO() : ShapefileIO<Boost_Polygon_2>() {};
+				IO_DATA_API PolygonsShapfileIO(std::string& out_path, OGRSpatialReference* copy_srs) : ShapefileIO<Boost_Polygon_2>(out_path, copy_srs) { create_layer(); };
+
+				IO_DATA_API bool PolygonsShapfileIO::create_layer() override {
+					try {
+						vector_layer = vector_dataset->CreateLayer("", spatial_refrence, wkbPolygon, NULL);
+						if (vector_layer == NULL) {
+							throw std::logic_error("Error : layer creation failed.");
+						}
+					}
+					catch (std::exception& e) {
+						std::cout << e.what() << std::endl;
+					}
+					if (vector_layer == NULL) return false;
+					return true;				
+				}
+
+				IO_DATA_API void PolygonsShapfileIO::load_geometries() override {
 					assert(geom_type == wkbPolygon && "Error! Loading Polygon geometries from non Polygon geometry layer!");
 					geometries_container = fill_polygon_container();
 				}
+
+				IO_DATA_API void PolygonsShapfileIO::write_shapefile(std::vector<Polygon_with_attributes>& polygon_container) {
+					write_polygon_shapefile(polygon_container);
+				};
 		};
 
-		class LineStringShapfileIO : ShapefileIO<Boost_LineString_2> {
+		class LineStringShapfileIO : public ShapefileIO<Boost_LineString_2> {
 		public:
-			IO_DATA_API void LineStringShapfileIO::load_geometries() {
+			IO_DATA_API LineStringShapfileIO() : ShapefileIO<Boost_LineString_2>() {};
+			IO_DATA_API LineStringShapfileIO(std::string& out_path, OGRSpatialReference* copy_srs) : ShapefileIO<Boost_LineString_2>(out_path, copy_srs) { create_layer(); };
+
+			IO_DATA_API bool LineStringShapfileIO::create_layer() override {
+				try {
+					vector_layer = vector_dataset->CreateLayer("", spatial_refrence, wkbLineString, NULL);
+					if (vector_layer == NULL) {
+						throw std::logic_error("Error : layer creation failed.");
+					}
+				}
+				catch (std::exception& e) {
+					std::cout << e.what() << std::endl;
+				}
+				if (vector_layer == NULL) return false;
+				return true;
+			}
+
+			IO_DATA_API void LineStringShapfileIO::load_geometries() override {
 				assert(geom_type == wkbLineString && "Error! Loading Linestring geometries from non Linestring geometry layer!");
 				geometries_container = fill_linestring_container();
 			}
+
+			IO_DATA_API void LineStringShapfileIO::write_shapefile(std::vector<LineString_with_attributes>& lines_container) {
+				write_linestring_shapefile(lines_container);
+			};
 		};
 
-		class PointsShapfileIO : ShapefileIO<Boost_Point_2> {
+		class PointsShapfileIO : public ShapefileIO<Boost_Point_2> {
 		public:
-			IO_DATA_API void PointsShapfileIO::load_geometries() {
+			IO_DATA_API PointsShapfileIO() : ShapefileIO<Boost_Point_2>() {};
+			IO_DATA_API PointsShapfileIO(std::string& out_path, OGRSpatialReference* copy_srs) : ShapefileIO<Boost_Point_2>(out_path, copy_srs) { create_layer(); };
+
+			IO_DATA_API bool PointsShapfileIO::create_layer() override {
+				try {
+					vector_layer = vector_dataset->CreateLayer("", spatial_refrence, wkbPoint, NULL);
+					if (vector_layer == NULL) {
+						throw std::logic_error("Error : layer creation failed.");
+					}
+				}
+				catch (std::exception& e) {
+					std::cout << e.what() << std::endl;
+				}
+				if (vector_layer == NULL) return false;
+				return true;
+			}
+
+			IO_DATA_API void PointsShapfileIO::load_geometries() override {
 				assert(geom_type == wkbPoint && "Error! Loading Points geometries from non Point geometry layer!");
 				geometries_container = fill_point_container();
 			}
+
+			IO_DATA_API void PointsShapfileIO::write_shapefile(std::vector<Point_with_attributes>& pts_container) {
+				write_point_shapefile(pts_container);
+			};
 		};
 
 	}
