@@ -101,12 +101,12 @@ namespace LxGeo
 		public:			
 			std::vector<geometry_type> geometries_container;
 			WeightsGraph weights_graph;
-		private:
 			std::vector<size_t> component_labels;
+			size_t n_components;
+		private:
 			size_t max_neighbors;
 			size_t min_neighbors;
 			double mean_neighbors;
-			size_t n_components;
 			size_t islands;
 		};
 				
