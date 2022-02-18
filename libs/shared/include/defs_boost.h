@@ -13,6 +13,7 @@ namespace LxGeo
 		namespace bg = boost::geometry;
 		namespace bgi = boost::geometry::index;
 		typedef bg::model::point<double, 2, bg::cs::cartesian> Boost_Point_2;
+		typedef bg::model::multi_point<Boost_Point_2> Boost_MultiPoint_2;
 		typedef bg::model::box<Boost_Point_2> Boost_Box_2;
 		typedef std::pair<Boost_Box_2, size_t> Boost_Value_2;
 		typedef std::pair<Boost_Point_2, size_t> Boost_Value_2_point;
