@@ -24,7 +24,7 @@ namespace LxGeo
 			std::vector<SpatialCoords>::iterator it2 = displacement_container.begin();
 
 			while (it1 != input_container.end() && it2 != displacement_container.end()) {
-				bg::strategy::transform::translate_transformer<double, 2, 2> trans_obj(it2->yc, it2->xc);
+				bg::strategy::transform::translate_transformer<double, 2, 2> trans_obj(it2->xc, it2->yc);
 				out_container.push_back(translate_geometry(*it1, trans_obj));
 				it1++;
 				it2++;
