@@ -303,6 +303,21 @@ namespace LxGeo
 					OGRFeature::DestroyFeature(feature);
 				}
 			};
+
+			IO_DATA_API void ShapefileIO::write_geometries(std::list<OGRGeometryH>& geoms_to_write) {
+
+				for (OGRGeometryH& c_geom : geoms_to_write) {
+					OGRFeature* feature;
+					feature = OGRFeature::CreateFeature(vector_layer->GetLayerDefn());
+					OGRGeometry* geom_to_set = OGRGeometry::FromHandle(c_geom);
+					feature->SetGeometry(geom_to_set);
+					// Writes new feature
+					OGRErr error = vector_layer->CreateFeature(feature);
+					if (error != OGRERR_NONE) std::cout << "Error code : " << int(error) << std::endl;
+					OGRFeature::DestroyFeature(feature);
+				}
+				vector_layer->SyncToDisk();
+			};
 			
 
 		public:
