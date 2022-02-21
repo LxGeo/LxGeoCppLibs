@@ -160,7 +160,7 @@ namespace LxGeo
 
 			IO_DATA_API void write_raster(std::string raster_path, bool force_write);
 
-			GDALDataset* create_copy_dataset(std::string raster_path);
+			GDALDataset* create_copy_dataset(std::string raster_path, GDALDataType _out_data_type= GDT_Unknown, size_t _band_count=NULL);
 
 			void _calc_pixel_coords(const double& sc_x, const double& sc_y, size_t& px_col, size_t& px_row) {
 				double& px = geotransform[0];
@@ -203,6 +203,12 @@ namespace LxGeo
 				_calc_spatial_coords(pc.col, pc.row, result_coords.xc, result_coords.yc);				
 				return result_coords;
 			}
+
+			IO_DATA_API static GDALDataset* create_dataset(std::string& dataset_path, GDALDriver* gdal_driver, GDALDataType gdal_datatype, size_t raster_X_size, size_t raster_Y_size,
+				double geotransform[6], size_t band_count, const OGRSpatialReference* srs, char** papzoptions);
+
+			IO_DATA_API static GDALDataset* create_dataset(std::string& dataset_path, GDALDriver* gdal_driver, GDALDataType gdal_datatype, 
+				OGREnvelope raster_extents, double pixel_x_size, double pixel_y_size, size_t band_count, const OGRSpatialReference* srs, char** papzoptions);
 
 
 		public:
