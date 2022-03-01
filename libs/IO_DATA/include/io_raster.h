@@ -10,6 +10,8 @@ namespace LxGeo
 	namespace IO_DATA
 	{
 
+		extern KGDAL2CV* kgdal2cv;
+
 		enum RasterCompFlags
 		{
 			m_pixelSize = 1 << 0,
@@ -67,10 +69,20 @@ namespace LxGeo
 			}
 
 			IO_DATA_API RasterIO(RasterIO& copy_raster, matrix& copy_raster_data): RasterIO(copy_raster){
-				if (copy_raster_data.cols == raster_X_size && copy_raster_data.rows == raster_Y_size)
-					raster_data = copy_raster_data;
-				else
+				if (copy_raster_data.cols != raster_X_size || copy_raster_data.rows != raster_Y_size)
 					throw std::runtime_error("RasterIO creation failed! matrix and raster size are different!");
+				raster_data = copy_raster_data;
+				raster_data_type = kgdal2cv->opencv2gdal(copy_raster_data.type());
+			}
+
+			IO_DATA_API RasterIO(matrix& copy_raster_data):RasterIO(){
+				raster_data_type = kgdal2cv->opencv2gdal(copy_raster_data.type());
+				band_count = copy_raster_data.channels();
+				raster_data = copy_raster_data;
+				raster_X_size = copy_raster_data.cols;
+				raster_Y_size = copy_raster_data.rows;
+				double new_geotransform[6] = { 0,1,0,0,0,1 };
+				std::copy(new_geotransform, new_geotransform + 6, geotransform);
 			}
 
 			IO_DATA_API bool compare(RasterIO& target_raster, int flags = RasterCompFlags::ALL, int except_flags =0 ) {
