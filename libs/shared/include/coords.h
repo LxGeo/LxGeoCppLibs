@@ -9,6 +9,7 @@ struct SpatialCoords {
 	SpatialCoords& operator+=(const SpatialCoords& rhs) { xc += rhs.xc; yc += rhs.yc; return *this; }
 	SpatialCoords& operator/=(const double& N) { xc /= N; yc /= N; return *this; }
 	SpatialCoords operator/(const double& N) { return { xc / N, yc / N }; }
+	SpatialCoords operator*(const double& N) { return { xc * N, yc * N }; }
 };
 
 struct PixelCoords {
@@ -21,6 +22,18 @@ auto spatial_coords_mean_aggregator = [](std::list<SpatialCoords>& pts_coords) {
 	SpatialCoords mean_coord = { 0.0,0.0 };
 	for (auto& c_coord : pts_coords) mean_coord += (c_coord / pts_coords.size());
 	return mean_coord;
+};
+
+auto spatial_coords_weighted_mean_aggregator = [](std::list<SpatialCoords>& pts_coords, std::list<double>& pts_weights) {
+	SpatialCoords mean_coord = { 0.0,0.0 };
+	auto& coords_iter = pts_coords.begin();
+	auto& weight_iter = pts_weights.begin();
+	double sum_weight = 0;
+	for (; coords_iter != pts_coords.end() && weight_iter != pts_weights.end(); ++coords_iter, ++weight_iter) {
+		mean_coord += (*coords_iter) * (*weight_iter);
+		sum_weight += *weight_iter;
+	}
+	return mean_coord/ sum_weight;
 };
 
 auto median = [](std::vector<double>& values)->double {
