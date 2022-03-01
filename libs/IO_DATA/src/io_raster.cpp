@@ -9,6 +9,7 @@ namespace LxGeo
 	namespace IO_DATA
 	{
 		KGDAL2CV* kgdal2cv;
+
 		bool RasterIO::load_raster(std::string raster_path, GDALAccess read_mode, bool lazy_load) {
 			raster_dataset = (GDALDataset*)GDALOpen(raster_path.c_str(), read_mode);
 			if (raster_dataset == NULL)
@@ -44,7 +45,7 @@ namespace LxGeo
 				return;
 			}
 
-			raster_dataset = create_copy_dataset(raster_path);
+			raster_dataset = create_copy_dataset(raster_path, kgdal2cv->opencv2gdal(raster_data.type()), band_count);
 			kgdal2cv->ImgWriteByGDAL(raster_dataset, raster_data,0,0);
 
 		}
