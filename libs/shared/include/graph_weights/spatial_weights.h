@@ -12,13 +12,14 @@ namespace LxGeo
 	{
 
 		typedef boost::property<boost::edge_weight_t, double> EdgeWeightProperty;
-		typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, boost::no_property, EdgeWeightProperty> WeightsGraph;
+		typedef boost::adjacency_list<boost::listS, boost::vecS, boost::undirectedS, boost::no_property, EdgeWeightProperty> WeightsGraph;
 				
 		typedef boost::graph_traits<WeightsGraph>::vertex_iterator vertex_iterator;
 		typedef boost::graph_traits<WeightsGraph>::vertex_descriptor vertex_descriptor;
 		typedef boost::graph_traits<WeightsGraph>::edge_descriptor edge_descriptor;
 		typedef boost::graph_traits<WeightsGraph>::adjacency_iterator adjacency_iterator;
 		typedef boost::graph_traits<WeightsGraph>::out_edge_iterator out_edge_iterator;
+		typedef boost::graph_traits<WeightsGraph>::edge_iterator edge_iterator;
 
 
 		enum WeightsStrategy {
@@ -60,6 +61,20 @@ namespace LxGeo
 			LX_GEO_FACTORY_SHARED_API ~SpatialWeights() {};
 
 			LX_GEO_FACTORY_SHARED_API virtual void fill_graph() {};
+
+			LX_GEO_FACTORY_SHARED_API void disconnect_edges(const std::function< bool(double)>& diconnection_lambda) {
+				auto edge_weight_map = boost::get(boost::edge_weight, weights_graph);
+				
+				edge_iterator vi, vi_end, next;
+				boost::tie(vi, vi_end) = boost::edges(weights_graph);
+				for (next = vi; vi != vi_end; vi = next) {
+					++next;
+					if (diconnection_lambda(edge_weight_map[*vi]))
+					{
+						boost::remove_edge(*vi, weights_graph);
+					}
+				}
+			};
 
 			LX_GEO_FACTORY_SHARED_API void run_labeling(){
 				//connected component
