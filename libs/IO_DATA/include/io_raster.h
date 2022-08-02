@@ -168,19 +168,26 @@ namespace LxGeo
 				return Boost_Point_2(geotransform[0], geotransform[3]);
 			}
 
+			IO_DATA_API auto get_matrix_transformer(double x_shift=0.0, double y_shift=0.0) {
+				return bg::strategy::transform::matrix_transformer<double, 2, 2>( geotransform[1], geotransform[2], geotransform[0]+ x_shift,
+					geotransform[4], geotransform[5], geotransform[3]+ y_shift,
+					0.0, 0.0, 1.0);
+			}
+
 			IO_DATA_API bool load_raster(std::string raster_path, GDALAccess read_mode= GA_ReadOnly, bool lazy_load = true);
 
 			IO_DATA_API void write_raster(std::string raster_path, bool force_write);
 
 			GDALDataset* create_copy_dataset(std::string raster_path, GDALDataType _out_data_type= GDT_Unknown, size_t _band_count=NULL);
 
-			void _calc_pixel_coords(const double& sc_x, const double& sc_y, size_t& px_col, size_t& px_row) {
+			template <typename coord_type>
+			void _calc_pixel_coords(const double& sc_x, const double& sc_y, coord_type& px_col, coord_type& px_row) {
 				double& px = geotransform[0];
 				double& py = geotransform[3];
 				double& rx = geotransform[1];
 				double& ry = geotransform[5];
-				px_col = static_cast<size_t>((sc_x - px) / rx);
-				px_row = static_cast<size_t>((sc_y - py) / ry);
+				px_col = static_cast<coord_type>((sc_x - px) / rx);
+				px_row = static_cast<coord_type>((sc_y - py) / ry);
 			}
 
 			IO_DATA_API PixelCoords get_pixel_coords(SpatialCoords& sp) {
@@ -195,6 +202,11 @@ namespace LxGeo
 				PixelCoords result_coords;
 				_calc_pixel_coords(sp.get<0>(), sp.get<1>(), result_coords.col, result_coords.row);
 				return result_coords;
+			}
+
+			IO_DATA_API void get_pixel_coords(Boost_Point_2& sp, cv::Point& cvp) {
+
+				_calc_pixel_coords(sp.get<0>(), sp.get<1>(), cvp.x, cvp.y);
 			}
 			
 			void _calc_spatial_coords(const size_t& px_col, const size_t& px_row, double& sc_x, double& sc_y) {
@@ -235,6 +247,7 @@ namespace LxGeo
 			double geotransform[6];
 			GDALDataType raster_data_type;
 			matrix raster_data;
+			cv::Rect pixel_extent;
 		};
 		
 	}

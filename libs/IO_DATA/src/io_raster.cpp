@@ -28,6 +28,7 @@ namespace LxGeo
 			if (!lazy_load) {
 				try {
 					raster_data = cv::imread(raster_path, cv::IMREAD_LOAD_GDAL);
+					pixel_extent = cv::Rect(cv::Point(), raster_data.size());
 				}
 				catch (std::exception& e) {
 					BOOST_LOG_TRIVIAL(debug) << e.what();
