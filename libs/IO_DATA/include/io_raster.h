@@ -174,6 +174,10 @@ namespace LxGeo
 					0.0, 0.0, 1.0);
 			}
 
+			IO_DATA_API auto get_inv_matrix_transformer(double x_shift = 0.0, double y_shift = 0.0) {
+				return bg::strategy::transform::inverse_transformer<double, 2, 2>(get_matrix_transformer());
+			}
+
 			IO_DATA_API bool load_raster(std::string raster_path, GDALAccess read_mode= GA_ReadOnly, bool lazy_load = true);
 
 			IO_DATA_API void write_raster(std::string raster_path, bool force_write);
@@ -208,6 +212,21 @@ namespace LxGeo
 
 				_calc_pixel_coords(sp.get<0>(), sp.get<1>(), cvp.x, cvp.y);
 			}
+
+			IO_DATA_API cv::Point get_cv_point(SpatialCoords& sp) {
+
+				cv::Point result_coords;
+				_calc_pixel_coords(sp.xc, sp.yc, result_coords.x, result_coords.y);
+				return result_coords;
+			}
+
+			IO_DATA_API cv::Point get_cv_point(Boost_Point_2& sp) {
+
+				cv::Point result_coords;
+				_calc_pixel_coords(sp.get<0>(), sp.get<1>(), result_coords.x, result_coords.y);
+				return result_coords;
+			}
+
 			
 			void _calc_spatial_coords(const size_t& px_col, const size_t& px_row, double& sc_x, double& sc_y) {
 				double& px = geotransform[0];
