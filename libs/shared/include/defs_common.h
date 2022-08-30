@@ -31,6 +31,9 @@ namespace LxGeo
 		LX_GEO_FACTORY_SHARED_API OGRPolygon transform_B2OGR_Polygon(Boost_Polygon_2& in_polygon);
 
 		LX_GEO_FACTORY_SHARED_API OGRLineString transform_B2OGR_LineString(Boost_LineString_2& in_linestring);
+		
+		LX_GEO_FACTORY_SHARED_API OGREnvelope transform_B2OGR_Envelope(Boost_Box_2& in_envelope);
+
 
 	}
 }

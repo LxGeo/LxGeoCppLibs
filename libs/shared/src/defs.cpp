@@ -141,6 +141,16 @@ namespace LxGeo
 			return out_linestring;
 		}
 
+		OGREnvelope transform_B2OGR_Envelope(Boost_Box_2& in_envelope) {
+			OGREnvelope out_envelope;
+			out_envelope.MinX = in_envelope.min_corner().get<0>();
+			out_envelope.MinY = in_envelope.min_corner().get<1>();
+			out_envelope.MaxX = in_envelope.max_corner().get<0>();
+			out_envelope.MaxY = in_envelope.max_corner().get<1>();
+			return out_envelope;
+		}
+
+
 	}
 }
 
