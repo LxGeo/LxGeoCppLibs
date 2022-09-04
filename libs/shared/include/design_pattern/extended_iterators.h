@@ -8,71 +8,87 @@ namespace LxGeo
 	{
 
 
-		template<typename T>
-		class capableIterator : public std::list<T> {
-
-			using std::list<T>::list;			
+		template<typename T,
+			template<typename, typename> class Container,
+			template<typename> class Allocator = std::allocator>
+		class iteratorCapableWrapper {
 
 		public:
-			capableIterator(std::list<T>& other) : std::list<T>(other.begin(), other.end()){};
+			Container<T, Allocator<T>>& wrapped_list;
 
-			virtual std::list<T> prevs(typename std::list<T>::iterator it, size_t cnt=1)=0;
-			virtual std::list<T> nexts(typename std::list<T>::iterator it, size_t cnt=1)=0;
+		public:
+			typedef typename Container<T, Allocator<T>>::iterator container_iterator_t;
 
-			std::vector<T> getWindow(typename const std::list<T>::iterator& it, size_t window_left_size, size_t window_right_size) {
-				std::vector<T> window_vec; window_vec.reserve(window_left_size + 1 + window_right_size);
+			iteratorCapableWrapper(Container<T, Allocator<T>>& other) : wrapped_list(other) {};
 
-				assert(it != this->end() && "iterator it should not be end iterator!");
+			virtual std::list<container_iterator_t> prevs(typename container_iterator_t it, size_t cnt=1)=0;
+			virtual std::list<container_iterator_t> nexts(typename container_iterator_t it, size_t cnt=1)=0;
 
+			std::vector<std::reference_wrapper<T>> getWindow(typename const container_iterator_t& it, size_t window_left_size, size_t window_right_size) {
+				std::vector<std::reference_wrapper<T>> window_vec; //window_vec.reserve(window_left_size + 1 + window_right_size);
+
+				assert(it != wrapped_list.end() && "iterator it should not be end iterator!");
+
+				size_t vec_idx = 0;
 				// fill left window side
-				std::list<T> left_window = prevs(it, window_left_size);
-				window_vec.insert(window_vec.begin(), left_window.begin(), left_window.end());
+				std::list<container_iterator_t> left_window = prevs(it, window_left_size);
+				for (auto& c_elem_it : left_window) {
+					//window_vec[vec_idx] = *c_elem_it; vec_idx++;
+					window_vec.push_back(*c_elem_it);
+				}
+				//window_vec.insert(window_vec.begin(), left_window.begin(), left_window.end());
 				// fill ref iterator position
+				//window_vec[vec_idx] = *it; vec_idx++;
 				window_vec.push_back(*it);
 				// fill right window side
-				std::list<T> right_window = nexts(it, window_right_size);
-				window_vec.insert(window_vec.end(), right_window.begin(), right_window.end());
+				std::list<container_iterator_t> right_window = nexts(it, window_right_size);
+				for (auto& c_elem_it : right_window) {
+					//window_vec[vec_idx] = *c_elem_it; vec_idx++;
+					window_vec.push_back(*c_elem_it);
+				}
+				//window_vec.insert(window_vec.end(), right_window.begin(), right_window.end());
 
 				return window_vec;
 			}
 
 		};
 
-		template<typename parent_iterator>
-		class unboundedIterator : public parent_iterator {
+		template<typename T, template<typename, typename> class Container>
+		class unboundedIterator : public iteratorCapableWrapper<T, Container> {
 
-			typedef typename parent_iterator::value_type T;
+			typedef typename iteratorCapableWrapper<T, Container> parent_iterator;
+			typedef typename parent_iterator::container_iterator_t container_iterator_t;
 			static_assert(std::is_default_constructible_v<T>,
 				"Parameter must be default-constructible");
 
 		public:
 			T null_val;
-			typename parent_iterator::iterator null_iterator() { return this->end(); };
+			typename parent_iterator::container_iterator_t null_iterator() { return this->wrapped_list.end(); };
 			using parent_iterator::parent_iterator;
 
 		public:
 
-			std::list<T> prevs(typename parent_iterator::iterator it, size_t cnt = 1) {
+			std::list<container_iterator_t> prevs(typename container_iterator_t it, size_t cnt = 1) override {
 				assert(it != null_iterator() && "iterator it should not be end iterator!");
 
-				std::list<T> prevs_list;
+				std::list<container_iterator_t> prevs_list;
 				while (cnt > 0) {
-					if (it == this->begin()) {
+					if (it == this->wrapped_list.begin()) {
 						prevs_list.insert(prevs_list.begin(), cnt, null_val); cnt = 0;
 					}
 					else {
 						it = prev(it);
 						cnt--;
-						prevs_list.push_front(*it);
+						prevs_list.push_front(it);
 					}
 				}
 				return prevs_list;
 			}
 
-			std::list<T> nexts(typename parent_iterator::iterator it, size_t cnt = 1) {
+			std::list<container_iterator_t> nexts(typename container_iterator_t it, size_t cnt = 1) override {
 				assert(it != null_iterator() && "iterator it should not be end iterator!");
 
-				std::list<T> nexts_list;
+				std::list<container_iterator_t> nexts_list;
 				while (cnt > 0) {
 					if (next(it) == null_iterator()) {
 						nexts_list.insert(nexts_list.end(), cnt, null_val); cnt = 0;
@@ -80,23 +96,23 @@ namespace LxGeo
 					else {
 						it = next(it);
 						cnt--;
-						nexts_list.push_back(*it);
+						nexts_list.push_back(it);
 					}
 				}
 				return nexts_list;
 			}
 
-			typename parent_iterator::iterator prev(typename const parent_iterator::iterator it, size_t cnt = 1) {
+			typename container_iterator_t prev(typename const container_iterator_t it, size_t cnt = 1) {
 				assert(it != null_iterator() && "iterator it should not be end iterator!");
 
 				if (cnt == 0)return it;
-				if (it == this->begin())
+				if (it == this->wrapped_list.begin())
 					return null_iterator();
 				else
 					return prev(std::prev(it), cnt - 1);
 			}
 
-			typename parent_iterator::iterator next(typename const parent_iterator::iterator it, size_t cnt = 1) {
+			typename container_iterator_t next(typename const container_iterator_t it, size_t cnt = 1) {
 				assert(it != null_iterator() && "iterator it should not be end iterator!");
 
 				if (cnt == 0)return it;
@@ -105,7 +121,6 @@ namespace LxGeo
 					return next_it;
 				return next(next_it, cnt - 1);
 			}
-
 
 			/*
 				Input [1,2,3,4]
@@ -144,60 +159,61 @@ namespace LxGeo
 		};
 
 
-		template<typename parent_iterator>
-		class circularIterator : public parent_iterator {
+		template<typename T, template<typename, typename> class Container>
+		class circularIterator : public iteratorCapableWrapper<T, Container> {
 
-			typedef typename parent_iterator::value_type T;
+			typedef typename iteratorCapableWrapper<T, Container> parent_iterator;
+			typedef typename parent_iterator::container_iterator_t container_iterator_t;
 
 		public:
 			using parent_iterator::parent_iterator;
-			typename parent_iterator::iterator null_iterator() { return this->end(); }
+			typename container_iterator_t null_iterator() { return this->wrapped_list.end(); }
 
 		public:
 
-			typename parent_iterator::iterator next(typename const parent_iterator::iterator it, size_t cnt = 1) {
+			typename container_iterator_t next(typename const container_iterator_t it, size_t cnt = 1) {
 				assert(it != null_iterator() && "iterator it should not be end iterator!");
 
-				cnt = cnt % this->size();
+				cnt = cnt % this->wrapped_list.size();
 				if (cnt == 0)return it;
 				auto next_it = std::next(it);
-				if (next_it == this->end())
-					return next(this->begin(), cnt - 1);
+				if (next_it == this->wrapped_list.end())
+					return next(this->wrapped_list.begin(), cnt - 1);
 				return next(next_it, cnt - 1);
 			}
 
-			typename parent_iterator::iterator prev(typename const parent_iterator::iterator it, size_t cnt = 1) {
+			typename container_iterator_t prev(typename const container_iterator_t it, size_t cnt = 1) {
 				assert(it != null_iterator() && "iterator it should not be end iterator!");
 
-				cnt = cnt % this->size();
+				cnt = cnt % this->wrapped_list.size();
 				if (cnt == 0)return it;
-				if (it == this->begin())
-					return prev(std::prev(this->end()), cnt - 1);
+				if (it == this->wrapped_list.begin())
+					return prev(std::prev(this->wrapped_list.end()), cnt - 1);
 				else
 					return prev(std::prev(it), cnt - 1);
 
 			}
 
-			std::list<T> prevs(typename parent_iterator::iterator it, size_t cnt = 1) {
+			std::list<container_iterator_t> prevs(typename container_iterator_t it, size_t cnt = 1) override {
 				assert(it != null_iterator() && "iterator it should not be end iterator!");
 
-				std::list<T> prevs_list;
+				std::list<container_iterator_t> prevs_list;
 				while (cnt > 0) {
 					it = prev(it);
 					cnt--;
-					prevs_list.push_front(*it);
+					prevs_list.push_front(it);
 					}
 				return prevs_list;
 			}
 
-			std::list<T> nexts(typename parent_iterator::iterator it, size_t cnt = 1) {
+			std::list<container_iterator_t> nexts(typename container_iterator_t it, size_t cnt = 1) override {
 				assert(it != null_iterator() && "iterator it should not be end iterator!");
 
-				std::list<T> nexts_list;
+				std::list<container_iterator_t> nexts_list;
 				while (cnt > 0) {
 					it = next(it);
 					cnt--;
-					nexts_list.push_back(*it);
+					nexts_list.push_back(it);
 				}
 				return nexts_list;
 			}
