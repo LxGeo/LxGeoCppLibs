@@ -18,7 +18,7 @@ namespace LxGeo
 			return Inexact_Point_2(bg::get<0>(boost_point), bg::get<1>(boost_point));
 		};
 
-		Boost_Point_2 transform_C2B_Point(Inexact_Point_2& cgal_point) {
+		Boost_Point_2 transform_C2B_Point(const Inexact_Point_2& cgal_point) {
 			return Boost_Point_2(cgal_point.x(), cgal_point.y());
 		};
 
@@ -105,19 +105,19 @@ namespace LxGeo
 			return out_box;
 		}
 
-		OGRPoint transform_B2OGR_Point(Boost_Point_2& in_point) {
+		OGRPoint transform_B2OGR_Point(const Boost_Point_2& in_point) {
 			return OGRPoint(in_point.get<0>(), in_point.get<1>());
 		}
 
-		OGRLinearRing transform_B2OGR_Ring(Boost_Ring_2& in_ring) {
+		OGRLinearRing transform_B2OGR_Ring(const Boost_Ring_2& in_ring) {
 			OGRLinearRing ogr_ring;
-			for (Boost_Point_2& c_pt : in_ring) {
+			for (const Boost_Point_2& c_pt : in_ring) {
 				ogr_ring.addPoint(&transform_B2OGR_Point(c_pt));
 			}
 			return ogr_ring;
 		}
 
-		OGRPolygon transform_B2OGR_Polygon(Boost_Polygon_2& in_polygon) {
+		OGRPolygon transform_B2OGR_Polygon(const Boost_Polygon_2& in_polygon) {
 
 			OGRPolygon out_polygon;						
 
@@ -135,13 +135,13 @@ namespace LxGeo
 			return out_polygon;
 		}
 
-		OGRLineString transform_B2OGR_LineString(Boost_LineString_2& in_linestring) {
+		OGRLineString transform_B2OGR_LineString(const Boost_LineString_2& in_linestring) {
 			OGRLineString out_linestring;
 			for (auto& c_pt : in_linestring) out_linestring.addPoint(&transform_B2OGR_Point(c_pt));
 			return out_linestring;
 		}
 
-		OGREnvelope transform_B2OGR_Envelope(Boost_Box_2& in_envelope) {
+		OGREnvelope transform_B2OGR_Envelope(const Boost_Box_2& in_envelope) {
 			OGREnvelope out_envelope;
 			out_envelope.MinX = in_envelope.min_corner().get<0>();
 			out_envelope.MinY = in_envelope.min_corner().get<1>();
