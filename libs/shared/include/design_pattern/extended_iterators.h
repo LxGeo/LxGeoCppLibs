@@ -14,20 +14,33 @@ namespace LxGeo
 		class iteratorCapableWrapper {
 
 		public:
-			Container<T, Allocator<T>>& wrapped_list;
+			typedef typename Container<T, Allocator<T>>::iterator container_iterator_t;
+			//Container<T, Allocator<T>>& wrapped_list;
+			container_iterator_t wrapped_begin_it;
+			container_iterator_t wrapped_end_it;
+			size_t wrapped_size;
 
 		public:
-			typedef typename Container<T, Allocator<T>>::iterator container_iterator_t;
 
-			iteratorCapableWrapper(Container<T, Allocator<T>>& other) : wrapped_list(other) {};
+			iteratorCapableWrapper(Container<T, Allocator<T>>& other) {
+				wrapped_begin_it = other.begin();
+				wrapped_end_it = other.end();
+				wrapped_size = other.size();
+			};
+
+			iteratorCapableWrapper(container_iterator_t& other_begin, container_iterator_t& other_end, size_t other_size ) {
+				wrapped_begin_it = other_begin;
+				wrapped_end_it = other_end;
+				wrapped_size = other_size;
+			};
 
 			virtual std::list<container_iterator_t> prevs(typename container_iterator_t it, size_t cnt=1)=0;
 			virtual std::list<container_iterator_t> nexts(typename container_iterator_t it, size_t cnt=1)=0;
 
 			std::vector<std::reference_wrapper<T>> getWindow(typename const container_iterator_t& it, size_t window_left_size, size_t window_right_size) {
-				std::vector<std::reference_wrapper<T>> window_vec; //window_vec.reserve(window_left_size + 1 + window_right_size);
+				std::vector<std::reference_wrapper<T>> window_vec; window_vec.reserve(window_left_size + 1 + window_right_size);
 
-				assert(it != wrapped_list.end() && "iterator it should not be end iterator!");
+				assert(it != wrapped_end_it && "iterator it should not be end iterator!");
 
 				size_t vec_idx = 0;
 				// fill left window side
@@ -63,7 +76,7 @@ namespace LxGeo
 
 		public:
 			T null_val;
-			typename parent_iterator::container_iterator_t null_iterator() { return this->wrapped_list.end(); };
+			typename parent_iterator::container_iterator_t null_iterator() { return this->wrapped_end_it; };
 			using parent_iterator::parent_iterator;
 
 		public:
@@ -73,7 +86,7 @@ namespace LxGeo
 
 				std::list<container_iterator_t> prevs_list;
 				while (cnt > 0) {
-					if (it == this->wrapped_list.begin()) {
+					if (it == this->wrapped_begin_it) {
 						prevs_list.insert(prevs_list.begin(), cnt, null_val); cnt = 0;
 					}
 					else {
@@ -106,7 +119,7 @@ namespace LxGeo
 				assert(it != null_iterator() && "iterator it should not be end iterator!");
 
 				if (cnt == 0)return it;
-				if (it == this->wrapped_list.begin())
+				if (it == this->wrapped_begin_it)
 					return null_iterator();
 				else
 					return prev(std::prev(it), cnt - 1);
@@ -167,28 +180,28 @@ namespace LxGeo
 
 		public:
 			using parent_iterator::parent_iterator;
-			typename container_iterator_t null_iterator() { return this->wrapped_list.end(); }
+			typename container_iterator_t null_iterator() { return this->wrapped_end_it; }
 
 		public:
 
 			typename container_iterator_t next(typename const container_iterator_t it, size_t cnt = 1) {
 				assert(it != null_iterator() && "iterator it should not be end iterator!");
 
-				cnt = cnt % this->wrapped_list.size();
+				cnt = cnt % this->wrapped_size;
 				if (cnt == 0)return it;
 				auto next_it = std::next(it);
-				if (next_it == this->wrapped_list.end())
-					return next(this->wrapped_list.begin(), cnt - 1);
+				if (next_it == this->wrapped_end_it)
+					return next(this->wrapped_begin_it, cnt - 1);
 				return next(next_it, cnt - 1);
 			}
 
 			typename container_iterator_t prev(typename const container_iterator_t it, size_t cnt = 1) {
 				assert(it != null_iterator() && "iterator it should not be end iterator!");
 
-				cnt = cnt % this->wrapped_list.size();
+				cnt = cnt % this->wrapped_size;
 				if (cnt == 0)return it;
-				if (it == this->wrapped_list.begin())
-					return prev(std::prev(this->wrapped_list.end()), cnt - 1);
+				if (it == this->wrapped_begin_it)
+					return prev(std::prev(this->wrapped_end_it), cnt - 1);
 				else
 					return prev(std::prev(it), cnt - 1);
 
