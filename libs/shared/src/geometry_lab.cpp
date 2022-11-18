@@ -125,5 +125,45 @@ namespace LxGeo
 			return pts_collinear;
 		}
 
+		OGRGeometry* BuildMultiLine(OGRGeometry* geometry)
+		{
+			OGRPolygon* poly = dynamic_cast<OGRPolygon*>(geometry);
+			OGRLinearRing* ring = poly->getExteriorRing();
+
+			Inexact_Polygon_2 skeleton;
+			for (int i = 0; i < ring->getNumPoints() - 1; i++) {
+				skeleton.push_back(Inexact_Point_2(ring->getX(i), ring->getY(i)));
+			}
+
+			if (skeleton.is_counterclockwise_oriented() == 0) { skeleton.reverse_orientation(); }
+			//std::cout << "Skeletonizing." << std::endl;
+			boost::shared_ptr<Inexact_Straight_Skeleton_2> iss = CGAL::create_interior_straight_skeleton_2(skeleton);
+			//std::cout << "Computed Skeleton." << std::endl;
+			OGRLineString* line = NULL;
+			// And finally append points to our shapefile
+			double edge = 0;
+			for (Inexact_Straight_Skeleton_2::Halfedge_iterator vi = iss->halfedges_begin(); vi != iss->halfedges_end(); ++vi) {
+				OGRPoint point = OGRPoint(vi->vertex()->point().x(), vi->vertex()->point().y());
+				OGRPoint npoint = OGRPoint(vi->next()->vertex()->point().x(), vi->next()->vertex()->point().y());
+				OGRLineString segment = OGRLineString();
+				segment.addPoint(&point);
+				segment.addPoint(&npoint);
+				if (line == NULL) { line = new OGRLineString; }
+				OGRLineString* tmp;
+				++edge;
+				if (vi->vertex()->is_skeleton() && vi->next()->vertex()->is_skeleton() && segment.Within(poly)) {
+					tmp = reinterpret_cast<OGRLineString*>(line->Union(&segment));
+					if (tmp != NULL) {
+						//std::cout << (int)(edge / (double)iss->size_of_halfedges() * 100.0) << "% ";
+						//std::cout.flush();
+						delete line;
+						line = tmp;
+					}
+				}
+			}
+			OGRGeometryFactory::destroyGeometry(poly);
+			return line;
+		}
+
 	}
 }

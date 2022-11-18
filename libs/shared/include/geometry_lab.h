@@ -29,5 +29,8 @@ namespace LxGeo
 			const Inexact_Point_2& p2,
 			const Inexact_Point_2& p3,
 			const Inexact_Point_2& p4);
+
+		LX_GEO_FACTORY_SHARED_API OGRGeometry* BuildMultiLine(OGRGeometry* geometry);
+
 	}
 }
