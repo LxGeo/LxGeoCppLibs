@@ -59,6 +59,7 @@ else()
 endif()
 
 include_directories(include)
+include_directories(../IO_DATA/include)
 add_definitions(-D_CONSOLE -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS)
 
 
