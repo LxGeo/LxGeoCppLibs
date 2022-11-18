@@ -41,14 +41,14 @@ namespace LxGeo
 		//LX_GEO_FACTORY_SHARED_API void boost_fill_ring(Boost_Ring_2& in_ring) {/*bg::append(in_ring, head); */ }
 
 		template <typename ...Tail>
-		LX_GEO_FACTORY_SHARED_API void boost_fill_ring(Boost_Ring_2& in_ring, Boost_Point_2& head, Tail&&... tail) {
+		void boost_fill_ring(Boost_Ring_2& in_ring, Boost_Point_2& head, Tail&&... tail) {
 			//boost_fill_ring(in_ring, head);
 			bg::append(in_ring, head);
 			boost_fill_ring(in_ring, tail...);
 		}
 
 		template <typename ...Tail>
-		LX_GEO_FACTORY_SHARED_API void boost_fill_polygon(Boost_Polygon_2& in_poly, size_t ring_idx, Boost_Point_2& head, Tail&&... tail)
+		void boost_fill_polygon(Boost_Polygon_2& in_poly, size_t ring_idx, Boost_Point_2& head, Tail&&... tail)
 		{
 			Boost_Ring_2* requiered_ring;
 			if (ring_idx == 0)
