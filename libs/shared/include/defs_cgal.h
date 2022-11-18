@@ -2,12 +2,14 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 //#include <CGAL/Exact_predicates_exact_constructions_kernel_with_sqrt.h>
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include<CGAL/Polygon_2.h>
+#include<CGAL/create_straight_skeleton_2.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Polygon_with_holes_2.h>
 #include <CGAL/CORE_Expr.h>
 #include <CGAL/number_utils.h>
 #include <CGAL/Cartesian_converter.h>
-#include <CGAL/Quadtree.h>
+//#include <CGAL/Quadtree.h>
 #include <boost/multiprecision/gmp.hpp>
 namespace LxGeo
 {
@@ -34,10 +36,12 @@ namespace LxGeo
 		typedef IK::Triangle_2 Inexact_Triangle_2;
 		typedef IK::Iso_rectangle_2 Inexact_Iso_rectangle_2;
 		typedef CGAL::Polygon_2<IK> Inexact_Polygon_2;
+		typedef CGAL::Straight_skeleton_2<IK>  Inexact_Straight_Skeleton_2;
+
 
 		typedef CGAL::Bbox_2 Bbox_2;
 
-		typedef CGAL::Quadtree<IK, std::vector<Inexact_Point_2>> Quadtree;
+		//typedef CGAL::Quadtree<IK, std::vector<Inexact_Point_2>> Quadtree;
 
 		typedef CGAL::Cartesian_converter<IK, EK> IK_to_EK;
 		typedef CGAL::Cartesian_converter<EK, IK> EK_to_IK;
