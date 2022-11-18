@@ -90,6 +90,7 @@ int KGDAL2CV::gdal2opencv(const GDALDataType& gdalType, const int& channels) {
 		/// UInt8
 	case GDT_Byte:
 		if (channels == 1) { return CV_8UC1; }
+		if (channels == 2) { return CV_8UC2; }
 		if (channels == 3) { return CV_8UC3; }
 		if (channels == 4) { return CV_8UC4; }
 		else { return CV_8UC(channels); }
@@ -98,6 +99,7 @@ int KGDAL2CV::gdal2opencv(const GDALDataType& gdalType, const int& channels) {
 		/// UInt16
 	case GDT_UInt16:
 		if (channels == 1) { return CV_16UC1; }
+		if (channels == 2) { return CV_16UC2; }
 		if (channels == 3) { return CV_16UC3; }
 		if (channels == 4) { return CV_16UC4; }
 		else { return CV_16UC(channels); }
@@ -106,6 +108,7 @@ int KGDAL2CV::gdal2opencv(const GDALDataType& gdalType, const int& channels) {
 		/// Int16
 	case GDT_Int16:
 		if (channels == 1) { return CV_16SC1; }
+		if (channels == 2) { return CV_16SC2; }
 		if (channels == 3) { return CV_16SC3; }
 		if (channels == 4) { return CV_16SC4; }
 		else { return CV_16SC(channels); }
@@ -115,6 +118,7 @@ int KGDAL2CV::gdal2opencv(const GDALDataType& gdalType, const int& channels) {
 	case GDT_UInt32:
 	case GDT_Int32:
 		if (channels == 1) { return CV_32SC1; }
+		if (channels == 2) { return CV_32SC2; }
 		if (channels == 3) { return CV_32SC3; }
 		if (channels == 4) { return CV_32SC4; }
 		else { return CV_32SC(channels); }
@@ -122,6 +126,7 @@ int KGDAL2CV::gdal2opencv(const GDALDataType& gdalType, const int& channels) {
 
 	case GDT_Float32:
 		if (channels == 1) { return CV_32FC1; }
+		if (channels == 2) { return CV_32FC2; }
 		if (channels == 3) { return CV_32FC3; }
 		if (channels == 4) { return CV_32FC4; }
 		else { return CV_32FC(channels); }
@@ -129,6 +134,7 @@ int KGDAL2CV::gdal2opencv(const GDALDataType& gdalType, const int& channels) {
 
 	case GDT_Float64:
 		if (channels == 1) { return CV_64FC1; }
+		if (channels == 2) { return CV_64FC2; }
 		if (channels == 3) { return CV_64FC3; }
 		if (channels == 4) { return CV_64FC4; }
 		else { return CV_64FC(channels); }
@@ -152,34 +158,40 @@ GDALDataType KGDAL2CV::opencv2gdal(int cvType) {
 
 		/// UInt8
 	case CV_8UC1:
+	case CV_8UC2:
 	case CV_8UC3:
 	case CV_8UC4:
 		return GDT_Byte;
 
 		/// UInt16
 	case CV_16UC1:
+	case CV_16UC2:
 	case CV_16UC3:
 	case CV_16UC4:
 		return GDT_UInt16;
 
 		/// Int16
 	case CV_16SC1:
+	case CV_16SC2:
 	case CV_16SC3:
 	case CV_16SC4:
 		return GDT_Int16;
 
 		/// UInt32
 	case CV_32SC1:
+	case CV_32SC2:
 	case CV_32SC3:
 	case CV_32SC4:
 		return GDT_Int32;
 
 	case CV_32FC1:
+	case CV_32FC2:
 	case CV_32FC3:
 	case CV_32FC4:
 		return GDT_Float32;
 
 	case CV_64FC1:
+	case CV_64FC2:
 	case CV_64FC3:
 	case CV_64FC4:
 		return GDT_Float64;
@@ -616,6 +628,18 @@ void KGDAL2CV::write_pixel(const double& pixelValue,
 		else if (image.depth() == CV_32F) { image.at<cv::Vec4f>(row, col)[channel] = newValue; }
 		else if (image.depth() == CV_64F) { image.at<cv::Vec4d>(row, col)[channel] = newValue; }
 		else { throw std::runtime_error("Unknown image depth, gdal: 4, image: 4"); }
+	}
+
+	// input: 2 channel, output: 2 channel
+	else if (gdalChannels == 2 && image.channels() == 2) {
+		if (image.depth() == CV_8U) { image.at<cv::Vec2b>(row, col)[channel] = newValue; }
+		//if (image.depth() == CV_8U){ image.ptr<cv::Vec4b>(row, col)[channel] = newValue; }
+		else if (image.depth() == CV_16U) { image.at<cv::Vec2w>(row, col)[channel] = newValue; }
+		else if (image.depth() == CV_16S) { image.at<cv::Vec2s>(row, col)[channel] = newValue; }
+		else if (image.depth() == CV_32S) { image.at<cv::Vec2i>(row, col)[channel] = newValue; }
+		else if (image.depth() == CV_32F) { image.at<cv::Vec2f>(row, col)[channel] = newValue; }
+		else if (image.depth() == CV_64F) { image.at<cv::Vec2d>(row, col)[channel] = newValue; }
+		else { throw std::runtime_error("Unknown image depth, gdal: 2, image: 2"); }
 	}
 
 	// input: > 4 channels, output: > 4 channels
