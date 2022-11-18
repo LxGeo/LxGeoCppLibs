@@ -26,8 +26,13 @@ namespace LxGeo
 			raster_data_type = raster_dataset->GetRasterBand(1)->GetRasterDataType();
 
 			if (!lazy_load) {
+				KGDAL2CV kgdal2cv;
 				try {
-					raster_data = cv::imread(raster_path, cv::IMREAD_LOAD_GDAL);
+					//raster_data = cv::imread(raster_path, cv::IMREAD_LOAD_GDAL );
+					raster_data = kgdal2cv.ImgReadByGDAL(raster_path);
+					if (raster_data.empty()) {
+						throw std::runtime_error("Empty raster data!");
+					}
 					pixel_extent = cv::Rect(cv::Point(), raster_data.size());
 				}
 				catch (std::exception& e) {

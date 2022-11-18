@@ -153,7 +153,7 @@ namespace LxGeo
 			}
 
 			IO_DATA_API ~RasterIO() {
-				close();
+				//close();
 			};
 
 			IO_DATA_API double get_pixel_width() {
