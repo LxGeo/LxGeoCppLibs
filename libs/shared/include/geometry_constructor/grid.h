@@ -12,11 +12,13 @@ namespace LxGeo
 	namespace GeometryFactoryShared
 	{
 
+
+
+
 		std::vector<OGREnvelope> create_rectangular_grid(
 			const double& xmin, const double& ymin, const double& xmax, const double& ymax,
 			const double& xstep, const double& ystep, const double& xsize, const double& ysize, 
-			const std::function<bool(const OGREnvelope&)>& predicate= [](const OGREnvelope& _){return true;}){
-		
+			const std::function<bool(const OGREnvelope&)>& predicate= [](const OGREnvelope& _){return true;}){		
 			std::vector<double> cols = numcpp::arange<double, std::vector, std::allocator>(xmin, xmax, xstep); //(xmin, xmax + x_step, x_step)
 			std::vector<double> rows = numcpp::arange<double, std::vector, std::allocator>(ymin, ymax, ystep);
 
@@ -30,6 +32,18 @@ namespace LxGeo
 			}
 			return envelopes;
 		}
+
+		std::vector<OGREnvelope> create_rectangular_grid(
+			const Boost_Box_2& box,
+			const double& xstep, const double& ystep, const double& xsize, const double& ysize,
+			const std::function<bool(const OGREnvelope&)>& predicate = [](const OGREnvelope& _) {return true; }) {
+			const double xmin = box.min_corner().get<0>();
+			const double ymin = box.min_corner().get<1>();
+			const double xmax = box.max_corner().get<0>();
+			const double ymax = box.max_corner().get<1>();
+			return create_rectangular_grid(xmin, ymin, xmax, ymax, xstep, ystep, xsize, ysize, predicate);
+		}
+
 
 	}
 }
