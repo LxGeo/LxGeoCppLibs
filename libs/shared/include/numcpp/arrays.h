@@ -39,6 +39,7 @@ namespace LxGeo
 			template<typename, typename> class Container,
 			template<typename> class Allocator = std::allocator>
 		Container<T, Allocator<T>> arange(const T& start, const T& stop, const T& step = 1) {
+            assert(step != 0);
 			Container<T, Allocator<T>> values;
 			for (T value = start; value < stop; value += step)
 				values.push_back(value);
