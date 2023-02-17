@@ -14,7 +14,6 @@ namespace LxGeo
 		void add_device_option(CLI::App& app, baseParameters& params) {
 			params.optional_str_parameters["device"] = "cpu";
 			app.add_option("-d,--device", params.optional_str_parameters["device"], "Device choice (CPU, GPU or COMBINED)")
-				->required()
 				->transform(CLI::CheckedTransformer(device_map, CLI::ignore_case));
 		}
 
