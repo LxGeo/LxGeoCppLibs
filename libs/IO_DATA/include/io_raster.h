@@ -3,14 +3,13 @@
 #include "export_io_data.h"
 #include "GDAL_OPENCV_IO.h"
 #include "coords.h"
+#include "lightweight/geoimage.h"
 
 namespace LxGeo
 {
 
 	namespace IO_DATA
 	{
-
-		extern KGDAL2CV* kgdal2cv;
 
 		enum RasterCompFlags
 		{
@@ -47,8 +46,8 @@ namespace LxGeo
 				raster_dataset = NULL;
 			};
 
-			IO_DATA_API RasterIO(std::string raster_path, GDALAccess read_mode = GA_ReadOnly, bool lazy_load = true): RasterIO() {				
-				load_raster(raster_path, read_mode = read_mode, lazy_load = lazy_load);
+			IO_DATA_API RasterIO(std::string _raster_path, GDALAccess read_mode = GA_ReadOnly, bool lazy_load = true): RasterIO() {
+				load_raster(_raster_path, read_mode = read_mode, lazy_load = lazy_load);
 			};
 
 			IO_DATA_API RasterIO(RasterIO& copy_raster) {
@@ -72,11 +71,11 @@ namespace LxGeo
 				if (copy_raster_data.cols != raster_X_size || copy_raster_data.rows != raster_Y_size)
 					throw std::runtime_error("RasterIO creation failed! matrix and raster size are different!");
 				raster_data = copy_raster_data;
-				raster_data_type = kgdal2cv->opencv2gdal(copy_raster_data.type());
+				raster_data_type = kgdal2cv.opencv2gdal(copy_raster_data.type());
 			}
 
 			IO_DATA_API RasterIO(matrix& copy_raster_data):RasterIO(){
-				raster_data_type = kgdal2cv->opencv2gdal(copy_raster_data.type());
+				raster_data_type = kgdal2cv.opencv2gdal(copy_raster_data.type());
 				band_count = copy_raster_data.channels();
 				raster_data = copy_raster_data;
 				raster_X_size = copy_raster_data.cols;
@@ -178,7 +177,7 @@ namespace LxGeo
 				return bg::strategy::transform::inverse_transformer<double, 2, 2>(get_matrix_transformer());
 			}
 
-			IO_DATA_API bool load_raster(std::string raster_path, GDALAccess read_mode= GA_ReadOnly, bool lazy_load = true);
+			IO_DATA_API bool load_raster(std::string _raster_path, GDALAccess read_mode= GA_ReadOnly, bool lazy_load = true);
 
 			IO_DATA_API void write_raster(std::string raster_path, bool force_write);
 
@@ -228,7 +227,7 @@ namespace LxGeo
 			}
 
 			
-			void _calc_spatial_coords(const size_t& px_col, const size_t& px_row, double& sc_x, double& sc_y) {
+			void _calc_spatial_coords(const int& px_col, const int& px_row, double& sc_x, double& sc_y) {
 				double& px = geotransform[0];
 				double& py = geotransform[3];
 				double& rx = geotransform[1];
@@ -237,13 +236,15 @@ namespace LxGeo
 				sc_y = px_row * ry + py;
 			}
 
-			IO_DATA_API SpatialCoords get_spatial_coords(PixelCoords& pc) {
+			IO_DATA_API SpatialCoords get_spatial_coords(const PixelCoords& pc) {
 				SpatialCoords result_coords;
-				double& px = geotransform[0];
-				double& py = geotransform[3];
-				double& rx = geotransform[1];
-				double& ry = geotransform[5];
 				_calc_spatial_coords(pc.col, pc.row, result_coords.xc, result_coords.yc);				
+				return result_coords;
+			}
+			
+			IO_DATA_API SpatialCoords get_spatial_coords(const int& col, const int& row) {
+				SpatialCoords result_coords;
+				_calc_spatial_coords(col, row, result_coords.xc, result_coords.yc);
 				return result_coords;
 			}
 
@@ -253,8 +254,41 @@ namespace LxGeo
 			IO_DATA_API static GDALDataset* create_dataset(std::string& dataset_path, GDALDriver* gdal_driver, GDALDataType gdal_datatype, 
 				OGREnvelope raster_extents, double pixel_x_size, double pixel_y_size, size_t band_count, const OGRSpatialReference* srs, char** papzoptions);
 
+			template <typename cv_mat_type>
+			GeoImage<cv_mat_type> get_view(const int& xStart, const int& yStart, const int& xSize, const int& ySize) {
+				int left_pad = -std::min<int>(xStart, 0);
+				int right_pad = std::max<int>(xStart+xSize, raster_X_size)-raster_X_size;
+				int top_pad = -std::min<int>(yStart, 0);
+				int down_pad = std::max<int>(yStart + ySize, raster_Y_size) - raster_Y_size;
+
+				matrix non_padded_data;
+				if (!raster_data.empty()) {
+					non_padded_data = raster_data(cv::Rect(xStart + left_pad, yStart + top_pad, xSize - right_pad, ySize - down_pad));
+				}
+				else {
+					non_padded_data = kgdal2cv.ImgReadByGDAL(raster_path, xStart + left_pad, yStart + top_pad, xSize - right_pad, ySize - down_pad);
+				}
+				matrix padded_data;
+				if (left_pad || right_pad || top_pad || down_pad)
+					copyMakeBorder(non_padded_data, padded_data, top_pad, down_pad, left_pad, right_pad, cv::BORDER_CONSTANT, cv::Scalar(0));
+				else
+					padded_data = non_padded_data;
+
+				GeoImage<cv_mat_type> out_geoimage;
+				out_geoimage.set_image(padded_data);
+				auto new_origin = get_spatial_coords( xStart, yStart );
+				out_geoimage.geotransform[0] = new_origin.xc;
+				out_geoimage.geotransform[1] = geotransform[1];
+				out_geoimage.geotransform[2] = geotransform[2];
+				out_geoimage.geotransform[3] = new_origin.yc;
+				out_geoimage.geotransform[4] = geotransform[4];
+				out_geoimage.geotransform[5] = geotransform[5];
+				return out_geoimage;
+			}
 
 		public:
+			KGDAL2CV kgdal2cv;
+			std::string raster_path;
 			Boost_Box_2 bounding_box;
 			double m_pixelSize;
 			size_t raster_X_size;
