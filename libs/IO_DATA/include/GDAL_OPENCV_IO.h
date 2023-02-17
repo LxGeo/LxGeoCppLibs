@@ -12,10 +12,10 @@ public:
 	IO_DATA_API ~KGDAL2CV();
 	IO_DATA_API bool ImgWriteByGDAL(GDALDataset*, const cv::Mat, int = 0, int = 0);
 	IO_DATA_API bool ImgWriteByGDAL(GDALRasterBand*, const cv::Mat, int = 0, int = 0);
-	cv::Mat ImgReadByGDAL(cv::String, bool = true);
-	cv::Mat ImgReadByGDAL(cv::String, int, int, int, int, bool = true);
-	cv::Mat ImgReadByGDAL(GDALRasterBand*, int, int, int, int);
-	cv::Mat ImgReadByGDAL(GDALRasterBand*);
+	IO_DATA_API cv::Mat ImgReadByGDAL(cv::String, bool = true);
+	IO_DATA_API cv::Mat ImgReadByGDAL(cv::String, int, int, int, int, bool = true);
+	IO_DATA_API cv::Mat ImgReadByGDAL(GDALRasterBand*, int, int, int, int);
+	IO_DATA_API cv::Mat ImgReadByGDAL(GDALRasterBand*);
 	IO_DATA_API int gdal2opencv(const GDALDataType&, const int& channels);
 	IO_DATA_API GDALDataType KGDAL2CV::opencv2gdal(const int cvType);
 	IO_DATA_API void Close();
