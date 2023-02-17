@@ -285,6 +285,15 @@ namespace LxGeo
 				out_geoimage.geotransform[5] = geotransform[5];
 				return out_geoimage;
 			}
+			template <typename cv_mat_type>
+			GeoImage<cv_mat_type> get_view(const double& xmin, const double& ymin, const double& xmax, const double& ymax){				
+				double col_start_subpixel, col_end_subpixel, row_start_subpixel, row_end_subpixel;
+				_calc_pixel_coords(xmin, ymax, col_start_subpixel, row_start_subpixel);
+				_calc_pixel_coords(xmax, ymin, col_end_subpixel, row_end_subpixel);
+				int col_start = (int)std::round(col_start_subpixel), col_end = (int)std::round(col_end_subpixel);
+				int row_start = (int)std::round(row_start_subpixel), row_end = (int)std::round(row_end_subpixel);
+				return get_view<cv_mat_type>(col_start, row_start, col_end - col_start, row_end - row_start);
+			}
 
 		public:
 			KGDAL2CV kgdal2cv;
