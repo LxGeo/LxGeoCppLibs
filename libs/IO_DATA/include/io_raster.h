@@ -156,11 +156,11 @@ namespace LxGeo
 			};
 
 			IO_DATA_API double get_pixel_width() {
-				return geotransform[1];
+				return std::abs(geotransform[1]);
 			}
 
 			IO_DATA_API double get_pixel_height() {
-				return geotransform[5];
+				return std::abs(geotransform[5]);
 			}
 
 			IO_DATA_API Boost_Point_2 get_origin_point() {
@@ -255,7 +255,7 @@ namespace LxGeo
 				OGREnvelope raster_extents, double pixel_x_size, double pixel_y_size, size_t band_count, const OGRSpatialReference* srs, char** papzoptions);
 
 			template <typename cv_mat_type>
-			GeoImage<cv_mat_type> get_view(const int& xStart, const int& yStart, const int& xSize, const int& ySize) {
+			GeoImage<cv_mat_type> get_view_pixel(const int& xStart, const int& yStart, const int& xSize, const int& ySize) {
 				int left_pad = -std::min<int>(xStart, 0);
 				int right_pad = std::max<int>(xStart+xSize, raster_X_size)-raster_X_size;
 				int top_pad = -std::min<int>(yStart, 0);
@@ -286,13 +286,13 @@ namespace LxGeo
 				return out_geoimage;
 			}
 			template <typename cv_mat_type>
-			GeoImage<cv_mat_type> get_view(const double& xmin, const double& ymin, const double& xmax, const double& ymax){				
+			GeoImage<cv_mat_type> get_view_spatial(const double& xmin, const double& ymin, const double& xmax, const double& ymax){
 				double col_start_subpixel, col_end_subpixel, row_start_subpixel, row_end_subpixel;
 				_calc_pixel_coords(xmin, ymax, col_start_subpixel, row_start_subpixel);
 				_calc_pixel_coords(xmax, ymin, col_end_subpixel, row_end_subpixel);
 				int col_start = (int)std::round(col_start_subpixel), col_end = (int)std::round(col_end_subpixel);
 				int row_start = (int)std::round(row_start_subpixel), row_end = (int)std::round(row_end_subpixel);
-				return get_view<cv_mat_type>(col_start, row_start, col_end - col_start, row_end - row_start);
+				return get_view_pixel<cv_mat_type>(col_start, row_start, col_end - col_start, row_end - row_start);
 			}
 
 		public:
