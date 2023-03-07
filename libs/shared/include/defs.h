@@ -10,18 +10,20 @@
 #include <string>
 #include <queue>
 #include <algorithm>
+#include <random>
 #include <boost/log/trivial.hpp>
 
 #include "defs_common.h"
 #include "defs_boost.h"
 #include "defs_opencv.h"
 #include "defs_cgal.h"
+#include "defs_ogr.h"
 #include "geometry_lab.h"
 #include <fmt/core.h>
 #include "tqdm/tqdm.h"
 #include "coords.h"
 
-using namespace LxGeo::LxGeoCommon;
+//using namespace LxGeo::LxGeoCommon;
 using namespace LxGeo::GeometryFactoryShared;
 
 template<typename T, typename T2>
@@ -81,6 +83,12 @@ namespace LxGeo
 				return vmax(val1, std::forward<Ts>(vs)...);
 		}
 
+		LX_GEO_FACTORY_SHARED_API std::string random_string(const size_t& length = 10, const std::string& prefix = "", const std::string& suffix = "");
+
+		inline double RADS(const double& in_deg){return in_deg * (M_PI / 180);}
+		inline double DEGS(const double& in_rad) { return in_rad * (180/ M_PI); }
+
+
 	}
 }
 
@@ -91,6 +99,12 @@ namespace Constants
 	const double SQRT_2 = 1.414213562373095;
 	const double PREC = 1.0 / (1 << 30) / (1 << 10);
 	const size_t MEAN_PTS_PER_POLYGON = 7;
+}
+
+namespace gdalConstants {
+	const std::set<std::string> gdal_types_set = {
+		"Byte", "Int8", "UInt16", "Int16", "UInt32", "Int32", "UInt64", "Int64", "Float32", "Float64", "CInt16", "CInt32", "CFloat32" , "CFloat64"
+	};
 }
 
 # define M_PI 3.14159265358979323846
