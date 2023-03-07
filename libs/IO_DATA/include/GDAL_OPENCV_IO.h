@@ -13,6 +13,7 @@ public:
 	IO_DATA_API bool ImgWriteByGDAL(GDALDataset*, const cv::Mat, int = 0, int = 0);
 	IO_DATA_API bool ImgWriteByGDAL(GDALRasterBand*, const cv::Mat, int = 0, int = 0);
 	IO_DATA_API cv::Mat ImgReadByGDAL(cv::String, bool = true);
+	IO_DATA_API cv::Mat KGDAL2CV::PaddedImgReadByGDAL(cv::String filename, int xStart, int yStart, int xWidth, int yWidth);
 	IO_DATA_API cv::Mat ImgReadByGDAL(cv::String, int, int, int, int, bool = true);
 	IO_DATA_API cv::Mat ImgReadByGDAL(GDALRasterBand*, int, int, int, int);
 	IO_DATA_API cv::Mat ImgReadByGDAL(GDALRasterBand*);

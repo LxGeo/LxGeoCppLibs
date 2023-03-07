@@ -766,9 +766,9 @@ bool KGDAL2CV::readData(cv::Mat img) {
 		GDALRasterBand* band = m_dataset->GetRasterBand(c + 1);
 
 		//if (hasColorTable == false){
-		if (GCI_RedBand == band->GetColorInterpretation()) realBandIndex = 2;
-		if (GCI_GreenBand == band->GetColorInterpretation()) realBandIndex = 1;
-		if (GCI_BlueBand == band->GetColorInterpretation()) realBandIndex = 0;
+		//if (GCI_RedBand == band->GetColorInterpretation()) realBandIndex = 2;
+		//if (GCI_GreenBand == band->GetColorInterpretation()) realBandIndex = 1;
+		//if (GCI_BlueBand == band->GetColorInterpretation()) realBandIndex = 0;
 		//}
 		if (hasColorTable && gdalColorTable->GetPaletteInterpretation() == GPI_RGB) c = img.channels() - 1;
 		// make sure the image band has the same dimensions as the image
@@ -896,6 +896,25 @@ cv::Mat KGDAL2CV::ImgReadByGDAL(GDALRasterBand* pBand)
 	return img;
 }
 
+cv::Mat KGDAL2CV::PaddedImgReadByGDAL(cv::String filename, int xStart, int yStart, int xWidth, int yWidth) {
+
+	m_filename = filename;
+	if (!readHeader()) return cv::Mat();
+
+	int left_pad = -std::min<int>(xStart, 0);
+	int right_pad = std::max<int>(xStart + xWidth, m_width) - m_width;
+	int top_pad = -std::min<int>(yStart, 0);
+	int down_pad = std::max<int>(yStart + yWidth, m_height) - m_height;
+
+	cv::Mat non_padded_data, padded_data;
+	non_padded_data = ImgReadByGDAL(m_filename, xStart + left_pad, yStart + top_pad, m_width - right_pad, m_height - down_pad);
+	if (left_pad || right_pad || top_pad || down_pad)
+		copyMakeBorder(non_padded_data, padded_data, top_pad, down_pad, left_pad, right_pad, cv::BORDER_CONSTANT, cv::Scalar(0));
+	else
+		padded_data = non_padded_data;
+	return padded_data;
+}
+
 cv::Mat KGDAL2CV::ImgReadByGDAL(cv::String filename, int xStart, int yStart, int xWidth, int yWidth, bool beReadFourth)
 {
 	m_filename = filename;
@@ -945,9 +964,9 @@ cv::Mat KGDAL2CV::ImgReadByGDAL(cv::String filename, int xStart, int yStart, int
 		GDALRasterBand* band = m_dataset->GetRasterBand(c + 1);
 
 		//if (hasColorTable == false){
-		if (GCI_RedBand == band->GetColorInterpretation()) realBandIndex = 2;
-		if (GCI_GreenBand == band->GetColorInterpretation()) realBandIndex = 1;
-		if (GCI_BlueBand == band->GetColorInterpretation()) realBandIndex = 0;
+		//if (GCI_RedBand == band->GetColorInterpretation()) realBandIndex = 2;
+		//if (GCI_GreenBand == band->GetColorInterpretation()) realBandIndex = 1;
+		//if (GCI_BlueBand == band->GetColorInterpretation()) realBandIndex = 0;
 		//}
 		if (hasColorTable && gdalColorTable->GetPaletteInterpretation() == GPI_RGB) c = img.channels() - 1;
 		// make sure the image band has the same dimensions as the image
