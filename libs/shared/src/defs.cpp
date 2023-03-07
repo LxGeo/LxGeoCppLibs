@@ -2,6 +2,7 @@
 #include "defs_cgal.h"
 #include "defs_boost.h"
 #include "defs_common.h"
+#include "defs_opencv.h"
 #include "export_shared.h"
 
 namespace LxGeo
@@ -13,7 +14,19 @@ namespace LxGeo
 			int c = a % b;
 			return (c < 0) ? c + b : c;
 		}
-		
+
+		std::string random_string(const size_t& length, const std::string& prefix, const std::string& suffix)
+		{
+			std::string str("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+
+			std::random_device rd;
+			std::mt19937 generator(rd());
+
+			std::shuffle(str.begin(), str.end(), generator);
+
+			return prefix + str.substr(0, length) + suffix;
+		}
+
 		Inexact_Point_2 transform_B2C_Point(const Boost_Point_2& boost_point) {
 			return Inexact_Point_2(bg::get<0>(boost_point), bg::get<1>(boost_point));
 		};
@@ -50,7 +63,7 @@ namespace LxGeo
 		}
 
 		OGRLinearRing container_transform_vector_Points2OGRRING(const std::vector<Inexact_Point_2>& input_vector) {
-			
+
 			OGRLinearRing aux_ogr_ring;
 			for (const Inexact_Point_2& c_point : input_vector) aux_ogr_ring.addPoint(&OGRPoint(c_point.x(), c_point.y()));
 			return aux_ogr_ring;
@@ -87,7 +100,7 @@ namespace LxGeo
 		}
 
 		double angle3p(const Boost_Point_2& p_m, const Boost_Point_2& p_0, const Boost_Point_2& p_1) {
-			
+
 			double m0x = p_0.get<0>() - p_m.get<0>(), m0y = p_0.get<1>() - p_m.get<1>(),
 				m1x = p_1.get<0>() - p_m.get<0>(), m1y = p_1.get<1>() - p_m.get<1>();
 
@@ -119,7 +132,7 @@ namespace LxGeo
 
 		OGRPolygon transform_B2OGR_Polygon(const Boost_Polygon_2& in_polygon) {
 
-			OGRPolygon out_polygon;						
+			OGRPolygon out_polygon;
 
 			if (in_polygon.outer().empty()) return out_polygon;
 
@@ -150,6 +163,51 @@ namespace LxGeo
 			return out_envelope;
 		}
 
+		OGRPolygon envelopeToPolygon(const OGREnvelope& in_envelope) {
+			OGRPolygon output_polygon;
+			OGRLinearRing ring;
+			ring.addPoint(in_envelope.MinX, in_envelope.MinY);
+			ring.addPoint(in_envelope.MaxX, in_envelope.MinY);
+			ring.addPoint(in_envelope.MaxX, in_envelope.MaxY);
+			ring.addPoint(in_envelope.MinX, in_envelope.MaxY);
+			ring.closeRings();
+			output_polygon.addRing(&ring);
+			return output_polygon;
+		}
+
+		void transform_G2CV_affine(const double in_geotransform[6], cv::Mat& out_affine_matrix) {
+			out_affine_matrix = (cv::Mat_<double>(2, 3) <<
+				in_geotransform[1], in_geotransform[2], in_geotransform[0],
+				in_geotransform[4], in_geotransform[5], in_geotransform[3]);
+
+		}
+
+		void transform_CV2G_affine(const cv::Mat& affine_matrix, double outtransform[6]) {
+			outtransform[0] = affine_matrix.at<double>(0, 2);
+			outtransform[1] = affine_matrix.at<double>(0, 0);
+			outtransform[2] = affine_matrix.at<double>(0, 1);
+			outtransform[3] = affine_matrix.at<double>(1, 2);
+			outtransform[4] = affine_matrix.at<double>(1, 0);
+			outtransform[5] = affine_matrix.at<double>(1, 1);
+		};
+
+		cv::Mat multiply_affine_matrices(const cv::Mat& m1, const cv::Mat& m2) {
+			assert (m1.size() == m2.size() && m1.size().width == 3 && m1.size().height == 2);
+
+			cv::Mat homography1 = cv::Mat::eye(3, 3, CV_64FC1);
+			cv::Mat homography2 = cv::Mat::eye(3, 3, CV_64FC1);
+			
+			cv::Mat aux1 = homography1.colRange(0, 3).rowRange(0, 2);
+			cv::Mat aux2 = homography2.colRange(0, 3).rowRange(0, 2);
+			m1.copyTo(aux1);
+			m2.copyTo(aux2);
+
+			cv::Mat product = homography1 * homography2;
+
+			return product.colRange(0, 3).rowRange(0, 2);
+		}
+
+		
 
 	}
 }

@@ -1,10 +1,15 @@
 #pragma once
 #include <opencv2/opencv.hpp>
 #include <opencv2/ximgproc.hpp>
+#include <opencv2/cudaarithm.hpp>
+#include <opencv2/cudaimgproc.hpp>
+#include <opencv2/cudafilters.hpp>
+#include "opencv2/cudawarping.hpp"
+#include "export_shared.h"
 
 namespace LxGeo
 {
-	namespace LxGeoCommon
+	namespace GeometryFactoryShared
 	{
 		typedef cv::Mat matrix;
 
@@ -63,5 +68,7 @@ namespace LxGeo
             enum { depth = CV_64F };
             typedef double value_type;
         };
+
+        LX_GEO_FACTORY_SHARED_API cv::Mat multiply_affine_matrices(const cv::Mat& m1, const cv::Mat& m2);
 	}
 }
