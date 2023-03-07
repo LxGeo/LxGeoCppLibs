@@ -281,6 +281,7 @@ namespace LxGeo
 				void PolygonsShapfileIO::write_shapefile(std::vector<Polygon_with_attributes>& polygon_container) {
 					try {
 						write_polygon_shapefile(polygon_container);
+						vector_layer->SyncToDisk();
 					}
 					catch (const std::exception& e) // reference to the base of a polymorphic object
 					{

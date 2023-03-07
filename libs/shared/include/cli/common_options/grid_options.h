@@ -10,10 +10,10 @@ namespace LxGeo
 		
 		void add_grid_options(CLI::App& app, baseParameters& params) {
 
-			double DEFAULT_GRID_XSTEP = 5000.0;
-			double DEFAULT_GRID_YSTEP = 5000.0;
-			double DEFAULT_GRID_XSIZE = 5000.0;
-			double DEFAULT_GRID_YSIZE = 5000.0;
+			double DEFAULT_GRID_XSTEP = 1000.0;
+			double DEFAULT_GRID_YSTEP = 1000.0;
+			double DEFAULT_GRID_XSIZE = 1000.0;
+			double DEFAULT_GRID_YSIZE = 1000.0;
 
 			auto add_single_argument = [&](std::string& arg_name, double& arg_default_value) {
 				params.optional_numerical_parameters[arg_name] = arg_default_value;
