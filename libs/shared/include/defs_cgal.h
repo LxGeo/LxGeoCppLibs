@@ -11,6 +11,7 @@
 #include <CGAL/Cartesian_converter.h>
 //#include <CGAL/Quadtree.h>
 #include <boost/multiprecision/gmp.hpp>
+#include <CGAL/IO/WKT.h>
 namespace LxGeo
 {
 	namespace GeometryFactoryShared

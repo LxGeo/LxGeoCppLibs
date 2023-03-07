@@ -61,6 +61,8 @@ else()
   message(STATUS "NOTICE: This exe requires fmt and will not be compiled.")
 endif()
 
+find_package(nlohmann_json CONFIG REQUIRED)
+
 include_directories(include)
 include_directories(../IO_DATA/include)
 add_definitions(-D_CONSOLE -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS)
@@ -80,7 +82,6 @@ else()
 	SHARED
 	${LX_GEO_FACTORY_SHARED_SRC_FILES})
 endif()
-
 	
-target_link_libraries(LxGeoFactoryShared  ${GDAL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_LOG_LIBRARY} ${OpenCV_LIBS} fmt::fmt fmt::fmt-header-only)
+target_link_libraries(LxGeoFactoryShared  ${GDAL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_LOG_LIBRARY} ${OpenCV_LIBS} fmt::fmt fmt::fmt-header-only nlohmann_json::nlohmann_json)
 target_compile_options(LxGeoFactoryShared PRIVATE ${OpenMP_CXX_FLAGS})
