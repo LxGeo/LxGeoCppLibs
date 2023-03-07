@@ -44,6 +44,14 @@ namespace LxGeo
 			return create_rectangular_grid(xmin, ymin, xmax, ymax, xstep, ystep, xsize, ysize, predicate);
 		}
 
+		std::vector<Polygon_with_attributes> grid_to_geoms_with_attributes(std::vector<OGREnvelope>& grid_space) {
+			std::vector<Boost_Polygon_2> grid_polys;
+			auto temp_conversion = [](OGREnvelope& a) ->Boost_Polygon_2 {return transform_OGR2B_Polygon(&envelopeToPolygon(a)); };
+			transform(grid_space.begin(), grid_space.end(), std::back_inserter(grid_polys), temp_conversion); 
+			auto grid_geoms = transform_to_geom_with_attr(grid_polys);
+			return grid_geoms;
+		}
+
 
 	}
 }
