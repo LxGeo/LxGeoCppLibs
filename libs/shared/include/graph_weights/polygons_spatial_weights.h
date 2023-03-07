@@ -13,11 +13,11 @@ namespace LxGeo
 
 		public:
 
-			LX_GEO_FACTORY_SHARED_API PolygonSpatialWeights():SpatialWeights() {};
+			PolygonSpatialWeights():SpatialWeights() {};
 
-			LX_GEO_FACTORY_SHARED_API PolygonSpatialWeights(std::vector<Boost_Polygon_2>& input_polygons) :SpatialWeights(input_polygons) {};
+			PolygonSpatialWeights(std::vector<Boost_Polygon_2>& input_polygons) :SpatialWeights(input_polygons) {};
 
-			LX_GEO_FACTORY_SHARED_API void fill_distance_band_graph(WeightsDistanceBandParams& wdbp) {
+			void fill_distance_band_graph(WeightsDistanceBandParams& wdbp) {
 
 				_reset();
 				Boost_RTree_2 rtree;
@@ -55,7 +55,7 @@ namespace LxGeo
 				}
 			}
 
-			LX_GEO_FACTORY_SHARED_API ~PolygonSpatialWeights() {};
+			~PolygonSpatialWeights() {};
 
 		};
 

@@ -33,7 +33,7 @@ namespace LxGeo
 		class SpatialWeights {
 
 		public:
-			LX_GEO_FACTORY_SHARED_API SpatialWeights() {
+			SpatialWeights() {
 				max_neighbors = 0;
 				min_neighbors = LONG_MAX;
 				mean_neighbors = 0;
@@ -41,7 +41,7 @@ namespace LxGeo
 				islands = 0;
 			};
 
-			LX_GEO_FACTORY_SHARED_API SpatialWeights(std::vector<geometry_type>& input_geometries): SpatialWeights(){
+			SpatialWeights(std::vector<geometry_type>& input_geometries): SpatialWeights(){
 				geometries_container = input_geometries;
 				_reset();
 			};
@@ -58,11 +58,11 @@ namespace LxGeo
 				islands = NULL;
 			}
 
-			LX_GEO_FACTORY_SHARED_API ~SpatialWeights() {};
+			~SpatialWeights() {};
 
-			LX_GEO_FACTORY_SHARED_API virtual void fill_graph() {};
+			virtual void fill_graph() {};
 
-			LX_GEO_FACTORY_SHARED_API void disconnect_edges(const std::function< bool(double)>& diconnection_lambda) {
+			void disconnect_edges(const std::function< bool(double)>& diconnection_lambda) {
 				auto edge_weight_map = boost::get(boost::edge_weight, weights_graph);
 				
 				edge_iterator vi, vi_end, next;
@@ -76,7 +76,7 @@ namespace LxGeo
 				}
 			};
 
-			LX_GEO_FACTORY_SHARED_API void run_labeling(){
+			void run_labeling(){
 				//connected component
 				component_labels = std::vector<size_t>(boost::num_vertices(weights_graph));
 				n_components = boost::connected_components(weights_graph, &component_labels[0]);
@@ -93,7 +93,7 @@ namespace LxGeo
 				mean_neighbors = double(sum_degrees) / boost::num_vertices(weights_graph);
 			}
 
-			LX_GEO_FACTORY_SHARED_API std::vector<LineString_with_attributes> export_edge_graph_as_LSwithAttr() {
+			std::vector<LineString_with_attributes> export_edge_graph_as_LSwithAttr() {
 				std::vector<LineString_with_attributes> edges_linestrings;
 				edges_linestrings.reserve(geometries_container.size());
 				auto es = boost::edges(weights_graph);
