@@ -181,7 +181,7 @@ namespace LxGeo
 
 			IO_DATA_API void write_raster(std::string raster_path, bool force_write);
 
-			GDALDataset* create_copy_dataset(std::string raster_path, GDALDataType _out_data_type= GDT_Unknown, size_t _band_count=NULL);
+			IO_DATA_API GDALDataset* create_copy_dataset(std::string raster_path, GDALDataType _out_data_type= GDT_Unknown, size_t _band_count=NULL);
 
 			template <typename coord_type>
 			void _calc_pixel_coords(const double& sc_x, const double& sc_y, coord_type& px_col, coord_type& px_row) {
@@ -306,7 +306,7 @@ namespace LxGeo
 			size_t band_count;
 			GDALDataset* raster_dataset;
 			OGRSpatialReference* spatial_refrence;
-			double geotransform[6];
+			double geotransform[6]; // xoff, a, b, yoff, d, e = geotransform
 			GDALDataType raster_data_type;
 			matrix raster_data;
 			cv::Rect pixel_extent;

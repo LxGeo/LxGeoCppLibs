@@ -25,6 +25,10 @@ namespace LxGeo
 			if (raster_dataset->GetSpatialRef()) spatial_refrence = raster_dataset->GetSpatialRef()->Clone();
 			raster_dataset->GetGeoTransform(geotransform);
 			raster_data_type = raster_dataset->GetRasterBand(1)->GetRasterDataType();
+			// loading extents
+			double minx = geotransform[0], maxy = geotransform[3];
+			double maxx = minx + geotransform[1] * raster_X_size, miny = maxy + geotransform[5] * raster_Y_size;
+			bounding_box = Boost_Box_2(Boost_Point_2(minx, miny), Boost_Point_2(maxx, maxy));
 
 			if (!lazy_load) {
 				KGDAL2CV kgdal2cv;
