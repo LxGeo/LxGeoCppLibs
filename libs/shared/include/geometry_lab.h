@@ -23,6 +23,8 @@ namespace LxGeo
 			*/
 		LX_GEO_FACTORY_SHARED_API std::list<std::vector<Inexact_Point_2>> explose_self_intersecting_polygon(const std::vector<Inexact_Point_2>& polygon_ring);
 
+		LX_GEO_FACTORY_SHARED_API std::list<Inexact_Polygon_2> explose_self_intersecting_polygon(const Inexact_Polygon_2& polygon_ring);
+
 		LX_GEO_FACTORY_SHARED_API bool pts_collinear_2(Inexact_Point_2 p1, Inexact_Point_2 p2, Inexact_Point_2 p3);
 
 		LX_GEO_FACTORY_SHARED_API double max_distance_between_lines(const Inexact_Point_2& p1,

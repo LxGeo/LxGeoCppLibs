@@ -42,6 +42,17 @@ namespace LxGeo
 			return std::vector<Inexact_Point_2>(simplified_R.begin(), simplified_R.end());
 		}
 
+		std::list<Inexact_Polygon_2> explose_self_intersecting_polygon(const Inexact_Polygon_2& polygon_ring) {
+			std::vector<Inexact_Point_2> coordinates_ring(polygon_ring.begin(), polygon_ring.end());
+			auto multiple_polygons_coordinates = explose_self_intersecting_polygon(coordinates_ring);
+			std::list<Inexact_Polygon_2> multiple_polygons;
+			for (auto& c_coordinates_ring : multiple_polygons_coordinates) {
+				Inexact_Polygon_2 c_polygon(c_coordinates_ring.begin(), c_coordinates_ring.end());
+				multiple_polygons.push_back(c_polygon);
+			}
+			return multiple_polygons;
+		}
+
 		std::list<std::vector<Inexact_Point_2>> explose_self_intersecting_polygon(const std::vector<Inexact_Point_2>& polygon_ring) {
 
 			// copy open ring points
@@ -134,12 +145,18 @@ namespace LxGeo
 			for (int i = 0; i < ring->getNumPoints() - 1; i++) {
 				skeleton.push_back(Inexact_Point_2(ring->getX(i), ring->getY(i)));
 			}
-
-			if (skeleton.is_counterclockwise_oriented() == 0) { skeleton.reverse_orientation(); }
+			bool polygon_is_simple = skeleton.is_simple();
+			//CGAL::write_polygon_WKT(std::cout << std::setprecision(15), skeleton);
+			if (!polygon_is_simple || skeleton.is_counterclockwise_oriented() == 0) {
+				skeleton.reverse_orientation(); 
+			}
 			//std::cout << "Skeletonizing." << std::endl;
 			boost::shared_ptr<Inexact_Straight_Skeleton_2> iss = CGAL::create_interior_straight_skeleton_2(skeleton);
-			//std::cout << "Computed Skeleton." << std::endl;
 			OGRLineString* line = NULL;
+			if (iss == NULL) {
+				CGAL::write_polygon_WKT(std::cout << std::setprecision(15), skeleton);
+			}				
+			//std::cout << "Computed Skeleton." << std::endl;
 			// And finally append points to our shapefile
 			double edge = 0;
 			for (Inexact_Straight_Skeleton_2::Halfedge_iterator vi = iss->halfedges_begin(); vi != iss->halfedges_end(); ++vi) {
