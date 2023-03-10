@@ -429,10 +429,11 @@ bool KGDAL2CV::ImgWriteByGDAL(GDALDataset* dataset, const cv::Mat img, int xStar
 		imgToSave = imgToSave.rowRange(0, height - yStart);
 	}*/
 
-	if (width != img.cols || height != img.rows) {
+	// uncomment for exact image saving
+	/*if (width != img.cols || height != img.rows) {
 		std::cout << "The size of cv::Mat and GDALDataset should be same!" << std::endl;
-		return false;
-	}
+		//return false;
+	}*/
 
 	GDALDataType dataType = dataset->GetRasterBand(1)->GetRasterDataType();
 	CheckDataType(dataType, imgToSave);
@@ -907,7 +908,7 @@ cv::Mat KGDAL2CV::PaddedImgReadByGDAL(cv::String filename, int xStart, int yStar
 	int down_pad = std::max<int>(yStart + yWidth, m_height) - m_height;
 
 	cv::Mat non_padded_data, padded_data;
-	non_padded_data = ImgReadByGDAL(m_filename, xStart + left_pad, yStart + top_pad, m_width - right_pad, m_height - down_pad);
+	non_padded_data = ImgReadByGDAL(m_filename, xStart + left_pad, yStart + top_pad, xWidth - right_pad, yWidth - down_pad);
 	if (left_pad || right_pad || top_pad || down_pad)
 		copyMakeBorder(non_padded_data, padded_data, top_pad, down_pad, left_pad, right_pad, cv::BORDER_CONSTANT, cv::Scalar(0));
 	else
