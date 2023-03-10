@@ -1,20 +1,51 @@
 #pragma once
 
-#pragma once
-
 #include "defs.h"
 #include "defs_cgal.h"
 #include "defs_common.h"
 #include "numcpp/arrays.h"
+#include "geometries_with_attributes/polygon_with_attributes.h"
 
 namespace LxGeo
 {
 	namespace GeometryFactoryShared
 	{
 
+		/******************* Boost geometries ******************/
+		std::vector<Boost_Box_2> create_rectangular_grid(
+			const double& xmin, const double& ymin, const double& xmax, const double& ymax,
+			const double& xstep, const double& ystep, const double& xsize, const double& ysize,
+			const std::function<bool(const Boost_Box_2&)>& predicate = [](const Boost_Box_2& _) {return true; }) {
+			std::vector<double> cols = numcpp::arange<double, std::vector, std::allocator>(xmin, xmax, xstep); //(xmin, xmax + x_step, x_step)
+			std::vector<double> rows = numcpp::arange<double, std::vector, std::allocator>(ymin, ymax, ystep);
+
+			std::vector<Boost_Box_2> envelopes; envelopes.reserve(cols.size() * rows.size());
+			for (auto& c_col : cols) {
+				for (auto& c_row : rows) {
+					Boost_Box_2 c_enevelop(
+						Boost_Point_2(c_col, c_row),
+						Boost_Point_2(c_col + xstep, c_row + ystep)
+					);
+					if (predicate(c_enevelop))
+						envelopes.push_back(c_enevelop);
+				}
+			}
+			return envelopes;
+		}
+
+		std::vector<Boost_Box_2> create_rectangular_grid(
+			const Boost_Box_2& box,
+			const double& xstep, const double& ystep, const double& xsize, const double& ysize,
+			const std::function<bool(const Boost_Box_2&)>& predicate = [](const Boost_Box_2& _) {return true; }) {
+			const double xmin = box.min_corner().get<0>();
+			const double ymin = box.min_corner().get<1>();
+			const double xmax = box.max_corner().get<0>();
+			const double ymax = box.max_corner().get<1>();
+			return create_rectangular_grid(xmin, ymin, xmax, ymax, xstep, ystep, xsize, ysize, predicate);
+		}
 
 
-
+		/******************* OGR geometries ******************/
 		std::vector<OGREnvelope> create_rectangular_grid(
 			const double& xmin, const double& ymin, const double& xmax, const double& ymax,
 			const double& xstep, const double& ystep, const double& xsize, const double& ysize, 
