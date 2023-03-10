@@ -3,6 +3,7 @@
 #include "export_io_data.h"
 #include "GDAL_OPENCV_IO.h"
 #include "coords.h"
+#include "spatial_coord_transformer.h"
 
 namespace LxGeo
 {
@@ -28,7 +29,7 @@ namespace LxGeo
 				for (size_t g_idx = 0; g_idx < 6; g_idx++)
 					geotransform[g_idx] = _geotransform[g_idx];
 			}
-			
+
 			template <typename cv_mat_type__>
 			void set_image(const cv_mat_type__& in_image) {
 
@@ -47,34 +48,27 @@ namespace LxGeo
 					}
 				}
 			}
-			//void set_image(cv_mat_type& in_image) {
-			//	image = in_image;
-			//}
+
+			cv::Mat get_image() const {
+				if constexpr (std::is_same_v < cv_mat_type, cv::Mat>)
+					return image;
+				else if constexpr (std::is_same_v < cv_mat_type, cv::cuda::GpuMat>)
+				{
+					cv::Mat cpu_image;
+					image.download(cpu_image);
+					return cpu_image;
+				}
+			}
 
 			template <typename coord_type>
-			void _calc_pixel_coords(const double& sc_x, const double& sc_y, coord_type& px_col, coord_type& px_row) const  {
-				const double& px = geotransform[0];
-				const double& py = geotransform[3];
-				const double& rx = geotransform[1];
-				const double& ry = geotransform[5];
-				const double& nx = geotransform[2];
-				const double& ny = geotransform[4];
-				//px_col = static_cast<coord_type>((sc_x - px) / rx);
-				//px_row = static_cast<coord_type>((sc_y - py) / ry);
-
-				px_col = (ny) ? static_cast<coord_type>((sc_x - px) / rx + (sc_y - py) / ny) : static_cast<coord_type>((sc_x - px) / rx);
-				px_row = (nx) ? static_cast<coord_type>((sc_y - py) / ry + (sc_x - px) / nx) : static_cast<coord_type>((sc_y - py) / ry);
+			void _calc_pixel_coords(const double& sc_x, const double& sc_y, coord_type& px_col, coord_type& px_row) const {
+				AffineTransformerBase trans_obj(geotransform);
+				trans_obj._calc_pixel_coords(sc_x, sc_y, px_col, px_row);
 			}
 
 			void _calc_spatial_coords(const int& px_col, const int& px_row, double& sc_x, double& sc_y) const {
-				const double& px = geotransform[0];
-				const double& py = geotransform[3];
-				const double& rx = geotransform[1];
-				const double& ry = geotransform[5];
-				const double& nx = geotransform[2];
-				const double& ny = geotransform[4];
-				sc_x = px_col * rx + px + px_row*nx;
-				sc_y = px_row * ry + py + px_col*ny;
+				AffineTransformerBase trans_obj(geotransform);
+				trans_obj._calc_spatial_coords(px_col, px_row, sc_x, sc_y);
 			}
 
 			template <typename cv_mat_type>
@@ -84,7 +78,7 @@ namespace LxGeo
 				int top_pad = -std::min<int>(yStart, 0);
 				int down_pad = std::max<int>(yStart + ySize, image.rows) - image.rows;
 
-				
+
 				cv::Rect view_rect(xStart + left_pad, yStart + top_pad, xSize - right_pad, ySize - down_pad);
 				cv_mat_type non_padded_data(image, view_rect);
 
@@ -96,7 +90,7 @@ namespace LxGeo
 
 				double new_origin_x, new_origin_y;
 				_calc_spatial_coords(xStart, yStart, new_origin_x, new_origin_y);
-				double _geotransform[6] = { 
+				double _geotransform[6] = {
 					new_origin_x , geotransform[1], geotransform[2],
 					new_origin_y, geotransform[4], geotransform[5] };
 				GeoImage<cv_mat_type> out_geoimage;
@@ -123,11 +117,11 @@ namespace LxGeo
 				GDALDataType out_data_type;
 				if (ptr_out_data_type) out_data_type = *ptr_out_data_type;
 				else out_data_type = kgdal2cv.opencv2gdal(image.type());
-				
+
 				GDALDataset* new_dataset = tiff_driver->Create(out_file.c_str(), image.cols, image.rows, image.channels(), out_data_type, NULL);
 				if (new_dataset == NULL) { throw std::exception(fmt::format("Cannot create dataset at {}", out_file).c_str()); }
 				if (spatial_refrence) new_dataset->SetSpatialRef(spatial_refrence);
-				
+
 				new_dataset->SetGeoTransform(geotransform);
 				cv::Mat to_save_image;
 				if constexpr (std::is_same_v<cv_mat_type, cv::Mat>)
@@ -140,6 +134,46 @@ namespace LxGeo
 				GDALClose(new_dataset);
 			}
 
+			/**
+			* Writes geoimage to dataset in the right position
+			*
+			* @param gdal_dataset a unique pointer to the sink gdal dataset.
+			* @param no_cropping_allowed a boolean specifying if cropping is allowed else an exception is thrown.
+			* @return void.
+			*/
+			void to_dataset(GDALDataset* gdal_dataset, bool no_cropping_allowed = false) const {
+
+				double sink_geotransform[6];
+				gdal_dataset->GetGeoTransform(sink_geotransform);
+				int col_start, row_start, col_end, row_end;
+				AffineTransformerBase(sink_geotransform)._calc_pixel_coords(geotransform[0], geotransform[3], col_start, row_start);
+				col_end = col_start + image.cols;
+				row_end = row_start + image.rows;
+				if (
+					col_start >= gdal_dataset->GetRasterXSize() ||
+					row_start >= gdal_dataset->GetRasterYSize() ||
+					col_end < 0 ||
+					row_end < 0
+					)
+					throw std::exception("GeoImage is fully outside the sink dataset!");
+
+				int left_crop = -std::min(col_start, 0);
+				int right_crop = std::max(col_end - gdal_dataset->GetRasterXSize(), 0);
+				int top_crop = -std::min(row_start, 0);
+				int bottom_crop = std::max(row_end - gdal_dataset->GetRasterYSize(), 0);
+
+				bool crop_needed = (left_crop | right_crop | top_crop | bottom_crop);
+				if (crop_needed && no_cropping_allowed)
+					throw std::exception("GeoImage is not fully included within sink dataset! Try unsetting crop_allowed parameter!");
+
+				cv::Mat cropped_matrix = get_image();
+				cropped_matrix = cropped_matrix.colRange(left_crop, image.cols - right_crop).rowRange(top_crop, image.rows - bottom_crop);
+				int sink_xstart = col_start + left_crop, sink_ystart = row_start + top_crop;
+
+				KGDAL2CV kgdal2cv;
+				kgdal2cv.ImgWriteByGDAL(gdal_dataset, cropped_matrix, sink_xstart, sink_ystart);
+			}
+
 			static GeoImage<cv_mat_type> from_file(const std::string& in_file, const OGREnvelope& spatial_envelope) {
 				GeoImage<cv_mat_type> loaded_gimg;
 				GDALDataset* raster_dataset = (GDALDataset*)GDALOpen(in_file.c_str(), GA_ReadOnly);
@@ -149,7 +183,7 @@ namespace LxGeo
 				loaded_gimg._calc_pixel_coords(spatial_envelope.MinX, spatial_envelope.MaxY, col_start_pixel, row_start_pixel);
 				loaded_gimg._calc_pixel_coords(spatial_envelope.MaxX, spatial_envelope.MinY, col_end_pixel, row_end_pixel);
 				KGDAL2CV kgdal2cv;
-				cv::Mat loaded_image = kgdal2cv.PaddedImgReadByGDAL(in_file, col_start_pixel, row_start_pixel, col_end_pixel-col_start_pixel, row_end_pixel-row_start_pixel);
+				cv::Mat loaded_image = kgdal2cv.PaddedImgReadByGDAL(in_file, col_start_pixel, row_start_pixel, col_end_pixel - col_start_pixel, row_end_pixel - row_start_pixel);
 				loaded_gimg.set_image(loaded_image);
 				// fix geotransform because of padding
 				loaded_gimg.geotransform[0] = spatial_envelope.MinX; loaded_gimg.geotransform[3] = spatial_envelope.MaxY;
