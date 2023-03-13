@@ -88,6 +88,7 @@ namespace LxGeo
 		inline double RADS(const double& in_deg){return in_deg * (M_PI / 180);}
 		inline double DEGS(const double& in_rad) { return in_rad * (180/ M_PI); }
 
+		LX_GEO_FACTORY_SHARED_API std::shared_ptr<GDALDataset> load_gdal_dataset_shared_ptr(const std::string& raster_file_path);
 
 	}
 }

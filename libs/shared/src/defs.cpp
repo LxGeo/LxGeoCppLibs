@@ -207,6 +207,19 @@ namespace LxGeo
 			return product.colRange(0, 3).rowRange(0, 2);
 		}
 
+		std::shared_ptr<GDALDataset> load_gdal_dataset_shared_ptr(const std::string& raster_file_path) {
+			bool file_exists = boost::filesystem::exists(raster_file_path);
+			if (!file_exists) {
+				auto err_msg = "File not found at path " + raster_file_path;
+				throw std::exception(err_msg.c_str());
+			}
+			GDALDataset* dst = (GDALDataset*)GDALOpen(raster_file_path.c_str(), GA_ReadOnly);
+			if (dst == NULL) {
+				auto err_msg = "Unable to open raster dataset in read mode from file " + raster_file_path;
+				throw std::exception(err_msg.c_str());
+			}
+			return std::shared_ptr<GDALDataset>(dst, GDALClose);
+		};
 		
 
 	}
