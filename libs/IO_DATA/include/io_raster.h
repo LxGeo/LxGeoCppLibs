@@ -10,24 +10,27 @@ namespace LxGeo
 
 	namespace IO_DATA
 	{
+		namespace ns_RasterCompFlags {
+			enum RasterCompFlags
+			{
+				m_pixelSize = 1 << 0,
+				raster_size = 1 << 1,
+				band_count = 1 << 2,
+				spatial_refrence = 1 << 3,
+				raster_data_type = 1 << 4,
+				raster_X_size = 1 << 5,
+				raster_Y_size = 1 << 6,
+				geotransform = 1 << 7,
+				ALL = m_pixelSize | raster_size | band_count | spatial_refrence | raster_data_type | raster_X_size | raster_Y_size | geotransform
+			};
 
-		enum RasterCompFlags
-		{
-			m_pixelSize = 1 << 0,
-			raster_size = 1 << 1,
-			band_count = 1 << 2,
-			spatial_refrence = 1 << 3,
-			raster_data_type = 1 << 4,
-			raster_X_size = 1 << 5,
-			raster_Y_size = 1 << 6,
-			geotransform = 1 << 7,
-			ALL = m_pixelSize | raster_size | band_count | spatial_refrence | raster_data_type | raster_X_size | raster_Y_size | geotransform
-		};
-
-		inline RasterCompFlags operator|(RasterCompFlags a, RasterCompFlags b)
-		{
-			return static_cast<RasterCompFlags>(static_cast<int>(a) | static_cast<int>(b));
+			inline RasterCompFlags operator|(RasterCompFlags a, RasterCompFlags b)
+			{
+				return static_cast<RasterCompFlags>(static_cast<int>(a) | static_cast<int>(b));
+			}
 		}
+		
+		using namespace ns_RasterCompFlags;
 
 		class RasterIO
 		{
