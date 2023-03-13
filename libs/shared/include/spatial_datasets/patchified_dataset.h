@@ -11,7 +11,7 @@ namespace LxGeo
 		struct PatchifiedDatasetParameters {
 			double spatial_patch_size, spatial_patch_overlap;
 			double spatial_pad_size = 0.0;
-			Boost_Polygon_2 boundary_geometry;
+			Boost_Polygon_2 boundary_geometry = Boost_Polygon_2();
 		};
 
 		class ContinuousPatchifiedDataset {
@@ -42,7 +42,7 @@ namespace LxGeo
 					Boost_Point_2(boundary_geometry_envelope.max_corner().get<0>() + spatial_pad_size, boundary_geometry_envelope.max_corner().get<1>() + spatial_pad_size)
 				);
 
-				int grid_step = _spatial_patch_size - _spatial_patch_overlap * 2;
+				int grid_step = _spatial_patch_size - _spatial_patch_overlap ;
 				assert (grid_step > 0 && "Spatial patch overlap is high! Reduce patch overlap.");
 
 				grid_boxes = create_rectangular_grid(
