@@ -205,7 +205,7 @@ namespace LxGeo
 		class PolygonsShapfileIO : public ShapefileIO<Boost_Polygon_2> {
 			public:
 				PolygonsShapfileIO() : ShapefileIO<Boost_Polygon_2>() {};
-				PolygonsShapfileIO(std::string& out_path, OGRSpatialReference* copy_srs) : ShapefileIO<Boost_Polygon_2>(out_path, copy_srs) { create_layer(); };
+				PolygonsShapfileIO(std::string out_path, OGRSpatialReference* copy_srs) : ShapefileIO<Boost_Polygon_2>(out_path, copy_srs) { create_layer(); };
 
 				void PolygonsShapfileIO::load_geometries() override {
 					assert(geom_type == wkbPolygon && "Error! Loading Polygon geometries from non Polygon geometry layer!");
