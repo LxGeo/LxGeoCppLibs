@@ -24,7 +24,7 @@ namespace LxGeo
 				for (auto& c_row : rows) {
 					Boost_Box_2 c_enevelop(
 						Boost_Point_2(c_col, c_row),
-						Boost_Point_2(c_col + xstep, c_row + ystep)
+						Boost_Point_2(c_col + xsize, c_row + ysize)
 					);
 					if (predicate(c_enevelop))
 						envelopes.push_back(c_enevelop);
@@ -43,7 +43,13 @@ namespace LxGeo
 			const double ymax = box.max_corner().get<1>();
 			return create_rectangular_grid(xmin, ymin, xmax, ymax, xstep, ystep, xsize, ysize, predicate);
 		}
-
+		std::vector<Polygon_with_attributes> grid_to_geoms_with_attributes(std::vector<Boost_Box_2>& grid_space) {
+			std::vector<Boost_Polygon_2> grid_polys;
+			auto temp_conversion = [](Boost_Box_2& a) ->Boost_Polygon_2 {Boost_Polygon_2 out_polygon; bg::assign(out_polygon, a);return out_polygon; };
+			transform(grid_space.begin(), grid_space.end(), std::back_inserter(grid_polys), temp_conversion);
+			auto grid_geoms = transform_to_geom_with_attr(grid_polys);
+			return grid_geoms;
+		}
 
 		/******************* OGR geometries ******************/
 		std::vector<OGREnvelope> create_rectangular_grid(
@@ -56,7 +62,7 @@ namespace LxGeo
 			std::vector<OGREnvelope> envelopes; envelopes.reserve(cols.size() * rows.size());
 			for (auto& c_col : cols) {
 				for (auto& c_row : rows) {
-					OGREnvelope c_enevelop; c_enevelop.MinX = c_col; c_enevelop.MinY = c_row; c_enevelop.MaxX = c_col+ xstep; c_enevelop.MaxY = c_row+ ystep;
+					OGREnvelope c_enevelop; c_enevelop.MinX = c_col; c_enevelop.MinY = c_row; c_enevelop.MaxX = c_col+ xsize; c_enevelop.MaxY = c_row+ ysize;
 					if (predicate(c_enevelop))
 						envelopes.push_back(c_enevelop);
 				}
