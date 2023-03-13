@@ -20,10 +20,15 @@ namespace LxGeo
 
 			GeoImage() {};
 			template <typename cv_mat_type__>
-			GeoImage(cv_mat_type__& _image, double _geotransform[6]) {
+			GeoImage(cv_mat_type__& _image, const double _geotransform[6]) {
 				set_image(_image);
 				set_geotransform(_geotransform);
 			}
+
+			GeoImage(const GeoImage& ref_gimg) {
+				image = ref_gimg.image.clone();
+				set_geotransform(ref_gimg.geotransform);
+			};
 
 			void set_geotransform(const double _geotransform[6]) {
 				for (size_t g_idx = 0; g_idx < 6; g_idx++)
@@ -99,11 +104,32 @@ namespace LxGeo
 				return out_geoimage;
 			};
 
+			template <typename envelope_type>
+			GeoImage<cv_mat_type> get_view_spatial(const envelope_type& spatial_envelope) {
+				double MinX, MinY, MaxX, MaxY;
+				if constexpr (std::is_same_v<envelope_type, OGREnvelope>) {
+					MinX = spatial_envelope.MinX; MinY = spatial_envelope.MinY; MaxX = spatial_envelope.MaxX; MaxY = spatial_envelope.MaxY;
+				}
+				else if constexpr (std::is_same_v<envelope_type, Boost_Box_2>) {
+					MinX = spatial_envelope.min_corner().get<0>();
+					MinY = spatial_envelope.min_corner().get<1>();
+					MaxX = spatial_envelope.max_corner().get<0>();
+					MaxY = spatial_envelope.max_corner().get<1>();
+				}
+				return get_view_spatial<cv_mat_type>(MinX, MinY, MaxX, MaxY);
+			}
+
 			template <typename cv_mat_type>
 			GeoImage<cv_mat_type> get_view_spatial(const double& xmin, const double& ymin, const double& xmax, const double& ymax) {
 				double col_start_subpixel, col_end_subpixel, row_start_subpixel, row_end_subpixel;
-				_calc_pixel_coords(xmin, ymax, col_start_subpixel, row_start_subpixel);
-				_calc_pixel_coords(xmax, ymin, col_end_subpixel, row_end_subpixel);
+				_calc_pixel_coords(
+					(sign(geotransform[1]) == 1) ? xmin : xmax,
+					(sign(geotransform[5]) == 1) ? ymin : ymax,
+					col_start_subpixel, row_start_subpixel);
+				_calc_pixel_coords(
+					(sign(geotransform[1]) == 1) ? xmax : xmin,
+					(sign(geotransform[5]) == 1) ? ymax : ymin,
+					col_end_subpixel, row_end_subpixel);
 				const int col_start = (int)std::round(col_start_subpixel), col_end = (int)std::round(col_end_subpixel);
 				const int row_start = (int)std::round(row_start_subpixel), row_end = (int)std::round(row_end_subpixel);
 				return get_view_pixel<cv_mat_type>(col_start, row_start, col_end - col_start, row_end - row_start);
@@ -174,19 +200,42 @@ namespace LxGeo
 				kgdal2cv.ImgWriteByGDAL(gdal_dataset, cropped_matrix, sink_xstart, sink_ystart);
 			}
 
-			static GeoImage<cv_mat_type> from_file(const std::string& in_file, const OGREnvelope& spatial_envelope) {
+			template <typename envelope_type>
+			static GeoImage<cv_mat_type> from_file(const std::string& in_file, const envelope_type& spatial_envelope) {
 				GeoImage<cv_mat_type> loaded_gimg;
 				GDALDataset* raster_dataset = (GDALDataset*)GDALOpen(in_file.c_str(), GA_ReadOnly);
 				raster_dataset->GetGeoTransform(loaded_gimg.geotransform);
 				GDALClose((GDALDatasetH)raster_dataset);
 				int col_start_pixel, col_end_pixel, row_start_pixel, row_end_pixel;
-				loaded_gimg._calc_pixel_coords(spatial_envelope.MinX, spatial_envelope.MaxY, col_start_pixel, row_start_pixel);
-				loaded_gimg._calc_pixel_coords(spatial_envelope.MaxX, spatial_envelope.MinY, col_end_pixel, row_end_pixel);
+
+				/**/
+				double MinX, MaxX, MinY, MaxY;
+				if constexpr (std::is_same_v<envelope_type, OGREnvelope>) {
+					MinX = spatial_envelope.MinX; MaxY = spatial_envelope.MaxY; MaxX = spatial_envelope.MaxX; MinY = spatial_envelope.MinY;
+				}
+				else if constexpr (std::is_same_v<envelope_type, Boost_Box_2>) {
+					MinX = spatial_envelope.min_corner().get<0>(); MaxX = spatial_envelope.max_corner().get<0>();
+					MinY = spatial_envelope.min_corner().get<1>(); MaxY = spatial_envelope.max_corner().get<1>();
+				}
+				int x_dircetion_sign = sign(loaded_gimg.geotransform[1]); // x sign
+				int y_direction_sign = sign(loaded_gimg.geotransform[5]); // y sign
+				loaded_gimg._calc_pixel_coords(
+					(x_dircetion_sign==1) ? MinX : MaxX,
+					(y_direction_sign==1) ? MinY: MaxY,
+					col_start_pixel, row_start_pixel);
+				loaded_gimg._calc_pixel_coords(
+					(x_dircetion_sign == 1) ? MaxX : MinX,
+					(y_direction_sign == 1) ? MaxY : MinY,
+					col_end_pixel, row_end_pixel);
+
+				loaded_gimg.geotransform[0] = (x_dircetion_sign == 1) ? MinX : MaxX;
+				loaded_gimg.geotransform[3] = (y_direction_sign == 1) ? MinY : MaxY;
+				
 				KGDAL2CV kgdal2cv;
 				cv::Mat loaded_image = kgdal2cv.PaddedImgReadByGDAL(in_file, col_start_pixel, row_start_pixel, col_end_pixel - col_start_pixel, row_end_pixel - row_start_pixel);
 				loaded_gimg.set_image(loaded_image);
 				// fix geotransform because of padding
-				loaded_gimg.geotransform[0] = spatial_envelope.MinX; loaded_gimg.geotransform[3] = spatial_envelope.MaxY;
+				
 				return loaded_gimg;
 			}
 
