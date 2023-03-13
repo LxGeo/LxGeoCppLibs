@@ -23,6 +23,8 @@ namespace LxGeo
 
 		public:
 
+			WPRasterDataset() {};
+
 			WPRasterDataset(std::string _raster_file_path, RProfile _raster_profile, WriteMode md=WriteMode::create):
 				raster_file_path(_raster_file_path), raster_profile(_raster_profile){
 
