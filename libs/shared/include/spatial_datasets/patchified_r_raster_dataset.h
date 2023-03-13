@@ -17,7 +17,7 @@ namespace LxGeo
 
 			// Constructor from filepath using predfined ContinuousPatchifiedDataset
 			RPRasterDataset(std::string _raster_file_path, const ContinuousPatchifiedDataset& _cpd) : raster_file_path(_raster_file_path), cpd(_cpd) {
-				_load_gdal_dataset();
+				raster_dataset = load_gdal_dataset_shared_ptr(raster_file_path);
 				raster_profile = IO_DATA::RProfile::from_gdal_dataset(raster_dataset);
 
 				pixel_patch_size = std::rint(cpd.patchified_dst_parameters.spatial_patch_size / raster_profile.gsd());
@@ -28,8 +28,9 @@ namespace LxGeo
 			RPRasterDataset(std::string _raster_file_path, int _pixel_patch_size, int _pixel_patch_overlap, int _pixel_pad_size=0, const Boost_Polygon_2& _boundary_geometry=Boost_Polygon_2()):
 				raster_file_path(_raster_file_path),pixel_patch_size(_pixel_patch_size), pixel_patch_overlap(_pixel_patch_overlap), pixel_pad_size(_pixel_pad_size)
 			{
-				_load_gdal_dataset();
-				raster_profile = IO_DATA::RProfile::from_gdal_dataset(raster_dataset);
+				raster_dataset = load_gdal_dataset_shared_ptr(raster_file_path);
+				RProfile temp_profile = IO_DATA::RProfile::from_gdal_dataset(raster_dataset);
+				raster_profile = temp_profile;
 				
 				Boost_Polygon_2 correct_boundary_geometry;
 				if (_boundary_geometry.outer().empty()) {
@@ -57,21 +58,6 @@ namespace LxGeo
 				auto& patch_box = cpd.grid_boxes[offset];
 				OGREnvelope patch_envelope = transform_B2OGR_Envelope(patch_box);
 				return IO_DATA::GeoImage<cv_mat_type>::from_file(raster_file_path, patch_envelope);
-			}
-
-		private:
-			void _load_gdal_dataset() {
-				bool file_exists = boost::filesystem::exists(raster_file_path);
-				if (!file_exists) {
-					auto err_msg = "File not found at path " + raster_file_path;
-					throw std::exception(err_msg.c_str());
-				}
-				GDALDataset* dst = (GDALDataset*)GDALOpen(raster_file_path.c_str(), GA_ReadOnly);
-				if (dst == NULL) {
-					auto err_msg = "Unable to open raster dataset in read mode from file " + raster_file_path;
-					throw std::exception(err_msg.c_str());
-				}
-				raster_dataset = std::shared_ptr<GDALDataset>(dst, GDALClose);
 			}
 
 		private:
