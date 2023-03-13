@@ -18,7 +18,7 @@ public:
 	IO_DATA_API cv::Mat ImgReadByGDAL(GDALRasterBand*, int, int, int, int);
 	IO_DATA_API cv::Mat ImgReadByGDAL(GDALRasterBand*);
 	IO_DATA_API int gdal2opencv(const GDALDataType&, const int& channels);
-	IO_DATA_API GDALDataType KGDAL2CV::opencv2gdal(const int cvType);
+	IO_DATA_API static GDALDataType KGDAL2CV::opencv2gdal(const int cvType);
 	IO_DATA_API void Close();
 private:
 	GDALDataset* m_dataset;
