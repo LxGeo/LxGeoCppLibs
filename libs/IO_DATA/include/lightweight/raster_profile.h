@@ -91,7 +91,10 @@ namespace LxGeo
 					crs_wkt = nullptr;
 				}
 				double geotransform[6];
-				gdal_dataset->GetGeoTransform(geotransform);
+				if (gdal_dataset->GetGeoTransform(geotransform) != CE_None){
+					// temporary fix for the north facing rasters
+					geotransform[5] = -1.0;
+				}
 				GDALDataType raster_data_type = gdal_dataset->GetRasterBand(1)->GetRasterDataType();
 				return RProfile(width, height, band_count, geotransform, raster_data_type, crs_wkt);				
 			}

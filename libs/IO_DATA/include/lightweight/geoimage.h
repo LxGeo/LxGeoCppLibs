@@ -31,8 +31,7 @@ namespace LxGeo
 			};
 
 			void set_geotransform(const double _geotransform[6]) {
-				for (size_t g_idx = 0; g_idx < 6; g_idx++)
-					geotransform[g_idx] = _geotransform[g_idx];
+				memcpy(geotransform, _geotransform, sizeof(double) * 6);
 			}
 
 			template <typename cv_mat_type__>
@@ -204,7 +203,10 @@ namespace LxGeo
 			static GeoImage<cv_mat_type> from_file(const std::string& in_file, const envelope_type& spatial_envelope) {
 				GeoImage<cv_mat_type> loaded_gimg;
 				GDALDataset* raster_dataset = (GDALDataset*)GDALOpen(in_file.c_str(), GA_ReadOnly);
-				raster_dataset->GetGeoTransform(loaded_gimg.geotransform);
+				if (raster_dataset->GetGeoTransform(loaded_gimg.geotransform) != CE_None) {
+					// temporary fix for the north facing rasters
+					loaded_gimg.geotransform[5] = -1.0;
+				}
 				GDALClose((GDALDatasetH)raster_dataset);
 				int col_start_pixel, col_end_pixel, row_start_pixel, row_end_pixel;
 
@@ -242,7 +244,10 @@ namespace LxGeo
 			static GeoImage<cv_mat_type> from_file(const std::string& in_file) {
 				GeoImage<cv_mat_type> loaded_gimg;
 				GDALDataset* raster_dataset = (GDALDataset*)GDALOpen(in_file.c_str(), GA_ReadOnly);
-				raster_dataset->GetGeoTransform(loaded_gimg.geotransform);
+				if (raster_dataset->GetGeoTransform(loaded_gimg.geotransform) != CE_None) {
+					// temporary fix for the north facing rasters
+					loaded_gimg.geotransform[5] = -1.0;
+				}
 				GDALClose((GDALDatasetH)raster_dataset);
 				KGDAL2CV kgdal2cv;
 				cv::Mat loaded_image = kgdal2cv.ImgReadByGDAL(in_file);
