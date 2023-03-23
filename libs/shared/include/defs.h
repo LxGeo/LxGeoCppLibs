@@ -90,6 +90,95 @@ namespace LxGeo
 
 		LX_GEO_FACTORY_SHARED_API std::shared_ptr<GDALDataset> load_gdal_dataset_shared_ptr(const std::string& raster_file_path);
 
+		LX_GEO_FACTORY_SHARED_API std::shared_ptr<GDALDataset> load_gdal_vector_dataset_shared_ptr(const std::string& vector_file_path);
+
+		template <typename env_type>
+		struct envelopeGet {
+			const env_type* env;
+			envelopeGet(const env_type* _env) :env(_env) {};
+			double getMinX() const {
+				if constexpr (std::is_same_v<env_type, OGREnvelope>)
+					return env->MinX;
+				else
+					return env->min_corner().get<0>();
+			}
+			double getMinY() const {
+				if constexpr (std::is_same_v<env_type, OGREnvelope>)
+					return env->MinY;
+				else
+					return env->min_corner().get<1>();
+			}
+			double getMaxX() const {
+				if constexpr (std::is_same_v<env_type, OGREnvelope>)
+					return env->MaxX;
+				else
+					return env->max_corner().get<0>();
+			}
+			double getMaxY() const {
+				if constexpr (std::is_same_v<env_type, OGREnvelope>)
+					return env->MaxY;
+				else
+					return env->max_corner().get<1>();
+			}
+		};
+
+		template <typename env_type>
+		struct envelopeGetSet: envelopeGet<env_type> {
+			env_type* env;
+			envelopeGetSet(env_type* _env) :envelopeGet<env_type>(_env), env(_env) {};
+			
+			void setMinX(const double& minx) {
+				if constexpr (std::is_same_v<env_type, OGREnvelope>)
+					env->MinX = minx;
+				else
+					env->min_corner().set<0>(minx);
+			}
+			void setMinY(const double& miny) {
+				if constexpr (std::is_same_v<env_type, OGREnvelope>)
+					env->MinY = miny;
+				else
+					env->min_corner().set<1>(miny);
+			}
+			void setMaxX(const double& maxx) {
+				if constexpr (std::is_same_v<env_type, OGREnvelope>)
+					env->MaxX = maxx;
+				else
+					env->max_corner().set<0>(maxx);
+			}
+			void setMaxY(const double& maxy) {
+				if constexpr (std::is_same_v<env_type, OGREnvelope>)
+					env->MaxY = maxy;
+				else
+					env->max_corner().set<1>(maxy);
+			}
+		};
+
+		template <typename env_type_1, typename env_type_2>
+		void merge_bounds(const env_type_1& env1, env_type_2& env2) {
+			envelopeGetSet(&env2).setMinX(min(envelopeGetSet(&env2).getMinX(), envelopeGetSet(&env1).getMinX()));
+			envelopeGetSet(&env2).setMinY(min(envelopeGetSet(&env2).getMinY(), envelopeGetSet(&env1).getMinY()));
+			envelopeGetSet(&env2).setMaxX(min(envelopeGetSet(&env2).getMaxX(), envelopeGetSet(&env1).getMaxX()));
+			envelopeGetSet(&env2).setMaxY(min(envelopeGetSet(&env2).getMaxY(), envelopeGetSet(&env1).getMaxY()));
+		}
+
+		template <typename env_type_0, typename env_type_1, typename env_type_2>
+		env_type_0 retrun_merge_bounds(const env_type_1& env1, env_type_2& env2) {
+			env_type_0 output_envelope;
+			envelopeGetSet(&output_envelope).setMinX(min(envelopeGetSet(&env2).getMinX(), envelopeGetSet(&env1).getMinX()));
+			envelopeGetSet(&output_envelope).setMinY(min(envelopeGetSet(&env2).getMinY(), envelopeGetSet(&env1).getMinY()));
+			envelopeGetSet(&output_envelope).setMaxX(min(envelopeGetSet(&env2).getMaxX(), envelopeGetSet(&env1).getMaxX()));
+			envelopeGetSet(&output_envelope).setMaxY(min(envelopeGetSet(&env2).getMaxY(), envelopeGetSet(&env1).getMaxY()));
+			return output_envelope;
+		}
+
+
+		enum WriteMode
+		{
+			create = 0, // Create dataset from void
+			update = 1 << 0, // Update dataset (keeping unmodified values the same)
+			overwrite = 1 << 1 // Overwrite dataset (resetting unmodified values)
+		};
+
 	}
 }
 
