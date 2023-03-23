@@ -15,9 +15,9 @@ namespace LxGeo
 
 			PolygonSpatialWeights():SpatialWeights() {};
 
-			PolygonSpatialWeights(std::vector<Boost_Polygon_2>& input_polygons) :SpatialWeights(input_polygons) {};
+			PolygonSpatialWeights(std::vector<Geometries_with_attributes<Boost_Polygon_2>>& input_polygons) :SpatialWeights(input_polygons) {};
 
-			void fill_distance_band_graph(WeightsDistanceBandParams& wdbp) {
+			/*void fill_distance_band_graph(WeightsDistanceBandParams& wdbp) {
 
 				_reset();
 				Boost_RTree_2 rtree;
@@ -27,7 +27,7 @@ namespace LxGeo
 
 				for (size_t c_polygon_idx = 0; c_polygon_idx < geometries_container.size(); ++c_polygon_idx) {
 					
-					Boost_Polygon_2& c_polygon = geometries_container[c_polygon_idx];
+					Boost_Polygon_2& c_polygon = geometries_container[c_polygon_idx].get_definition();
 					Boost_Box_2 c_polygon_envelop;
 					boost::geometry::envelope(c_polygon, c_polygon_envelop);
 					Boost_Box_2 c_polygon_envelop_buffered = box_buffer(c_polygon_envelop, threshold_value);
@@ -38,7 +38,7 @@ namespace LxGeo
 					// search for polygons meeting threshomd critirea
 					for (auto& c_candidate : candidates) {
 						size_t c_candidate_idx = c_candidate.second;
-						Boost_Polygon_2& c_candidate_polygon = geometries_container[c_candidate_idx];
+						Boost_Polygon_2& c_candidate_polygon = geometries_container[c_candidate_idx].get_definition();
 						double inter_distance = boost::geometry::distance(c_polygon, c_candidate_polygon);
 						if (inter_distance > threshold_value)
 							continue;
@@ -53,7 +53,7 @@ namespace LxGeo
 					rtree.insert(Boost_Value_2(c_polygon_envelop, c_polygon_idx));
 
 				}
-			}
+			}*/
 
 			~PolygonSpatialWeights() {};
 
