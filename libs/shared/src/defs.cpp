@@ -99,6 +99,20 @@ namespace LxGeo
 
 		}
 
+		Boost_LineString_2 transform_OGR2B_Linestring(OGRLineString* ogr_linestring) {
+			Boost_LineString_2 aux_boost_linestring;
+			for (size_t v_idx = 0; v_idx < ogr_linestring->getNumPoints(); ++v_idx) {
+				OGRPoint pt;
+				ogr_linestring->getPoint(v_idx, &pt);
+				aux_boost_linestring.push_back(transform_OGR2B_Point(&pt));
+			}
+			return aux_boost_linestring;
+		}
+
+		Boost_Point_2 transform_OGR2B_Point(OGRPoint* ogr_point){
+			return Boost_Point_2(ogr_point->getX(), ogr_point->getY());
+		}
+
 		double angle3p(const Boost_Point_2& p_m, const Boost_Point_2& p_0, const Boost_Point_2& p_1) {
 
 			double m0x = p_0.get<0>() - p_m.get<0>(), m0y = p_0.get<1>() - p_m.get<1>(),
@@ -120,6 +134,14 @@ namespace LxGeo
 
 		OGRPoint transform_B2OGR_Point(const Boost_Point_2& in_point) {
 			return OGRPoint(in_point.get<0>(), in_point.get<1>());
+		}
+
+		OGRLineString transform_B2OGR_LineString(const Boost_Ring_2& in_ring) {
+			OGRLineString ogr_linering;
+			for (const Boost_Point_2& c_pt : in_ring) {
+				ogr_linering.addPoint(&transform_B2OGR_Point(c_pt));
+			}
+			return ogr_linering;
 		}
 
 		OGRLinearRing transform_B2OGR_Ring(const Boost_Ring_2& in_ring) {
@@ -161,6 +183,10 @@ namespace LxGeo
 			out_envelope.MaxX = in_envelope.max_corner().get<0>();
 			out_envelope.MaxY = in_envelope.max_corner().get<1>();
 			return out_envelope;
+		}
+
+		Boost_Box_2 transform_OGR2B_Envelope(const OGREnvelope& in_envelope) {
+			return { {in_envelope.MinX, in_envelope.MinY}, {in_envelope.MaxX, in_envelope.MaxY} };
 		}
 
 		OGRPolygon envelopeToPolygon(const OGREnvelope& in_envelope) {
@@ -216,6 +242,20 @@ namespace LxGeo
 			GDALDataset* dst = (GDALDataset*)GDALOpen(raster_file_path.c_str(), GA_ReadOnly);
 			if (dst == NULL) {
 				auto err_msg = "Unable to open raster dataset in read mode from file " + raster_file_path;
+				throw std::exception(err_msg.c_str());
+			}
+			return std::shared_ptr<GDALDataset>(dst, GDALClose);
+		};
+
+		std::shared_ptr<GDALDataset> load_gdal_vector_dataset_shared_ptr(const std::string& vector_file_path) {
+			bool file_exists = boost::filesystem::exists(vector_file_path);
+			if (!file_exists) {
+				auto err_msg = "File not found at path " + vector_file_path;
+				throw std::exception(err_msg.c_str());
+			}
+			GDALDataset* dst = (GDALDataset*)GDALOpenEx(vector_file_path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL);
+			if (dst == NULL) {
+				auto err_msg = "Unable to open raster dataset in read mode from file " + vector_file_path;
 				throw std::exception(err_msg.c_str());
 			}
 			return std::shared_ptr<GDALDataset>(dst, GDALClose);
