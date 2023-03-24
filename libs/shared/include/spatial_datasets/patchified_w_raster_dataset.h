@@ -12,13 +12,6 @@ namespace LxGeo
 	{
 		using namespace LxGeo::IO_DATA;
 
-		enum WriteMode
-		{
-			create = 0, // Create dataset from void
-			update = 1 << 0, // Update dataset (keeping unmodified values the same)
-			overwrite = 1 << 1 // Overwrite dataset (resetting unmodified values)
-		};
-
 		class WPRasterDataset {
 
 		public:

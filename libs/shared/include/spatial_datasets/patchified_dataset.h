@@ -45,7 +45,7 @@ namespace LxGeo
 				int grid_step = _spatial_patch_size - _spatial_patch_overlap ;
 				assert (grid_step > 0 && "Spatial patch overlap is high! Reduce patch overlap.");
 
-				grid_boxes = create_rectangular_grid(
+				grid_boxes = create_rectangular_grid<Boost_Box_2, Boost_Box_2>(
 					boundary_geometry_envelope, grid_step, grid_step, _spatial_patch_size, _spatial_patch_size,
 					[&_boundary_geometry](const Boost_Box_2& a)->bool {return bg::intersects(_boundary_geometry, a); });
 			};
