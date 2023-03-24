@@ -9,7 +9,28 @@ namespace LxGeo
 		class Geometries_with_attributes
 		{
 		public:
+			Geometries_with_attributes() {};
 			Geometries_with_attributes(const T& _definition);
+			Geometries_with_attributes(const Geometries_with_attributes<T>& ref_geom_wa) { // This new constructor may generate problems
+				bg::assign(get_definition(), ref_geom_wa.get_definition());
+				double_attributes.insert(ref_geom_wa.double_attributes.begin(), ref_geom_wa.double_attributes.end());
+				int_attributes.insert(ref_geom_wa.int_attributes.begin(), ref_geom_wa.int_attributes.end());
+				string_attributes.insert(ref_geom_wa.string_attributes.begin(), ref_geom_wa.string_attributes.end());
+			}
+			template <typename ref_T>
+			Geometries_with_attributes(const Geometries_with_attributes<ref_T>& ref_geom_wa) { // This new constructor may generate problems
+				std::list<std::string> int_attributes, double_attributes, string_attributes;
+				ref_geom_wa.get_list_of_double_attributes(double_attributes);
+				ref_geom_wa.get_list_of_int_attributes(int_attributes);
+				ref_geom_wa.get_list_of_string_attributes(string_attributes);
+
+				for (const std::string& field_name : double_attributes)
+					set_double_attribute(field_name, ref_geom_wa.get_double_attribute(field_name));
+				for (const std::string& field_name : int_attributes)
+					set_int_attribute(field_name, ref_geom_wa.get_int_attribute(field_name));
+				for (const std::string& field_name : string_attributes)
+					set_string_attribute(field_name, ref_geom_wa.get_string_attribute(field_name));
+			}
 			~Geometries_with_attributes() { }
 
 			void set_definition(const T& _definition) { definition = _definition; }
