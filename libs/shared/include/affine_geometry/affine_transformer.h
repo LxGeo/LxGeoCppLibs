@@ -9,7 +9,7 @@ namespace LxGeo
 	{
 
 		template <typename geometry_type>
-		geometry_type translate_geometry(geometry_type& in_geometry, bg::strategy::transform::translate_transformer<double, 2, 2>& trans_obj) {
+		geometry_type translate_geometry(const geometry_type& in_geometry, bg::strategy::transform::translate_transformer<double, 2, 2>& trans_obj) {
 			geometry_type out_geom;
 			boost::geometry::transform(in_geometry, out_geom, trans_obj);
 			return out_geom;
