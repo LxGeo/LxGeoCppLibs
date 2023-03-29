@@ -233,7 +233,7 @@ namespace LxGeo
 
 
 			void to_dataset(
-				GDALDataset* vector_dataset, std::string out_layer_name = "",
+				GDALDataset* vector_dataset, WriteMode wm ,std::string out_layer_name = "",
 				const std::function<bool(const Geometries_with_attributes<geom_type>&)>& filter_fn = [](const Geometries_with_attributes<geom_type>& _) {return true; }
 			) const {
 
@@ -251,7 +251,7 @@ namespace LxGeo
 				for (size_t i = 0; i < geometries_container.size(); ++i) {
 					const Geometries_with_attributes<geom_type>& gwa = geometries_container[i];
 					if (filter_fn(gwa))
-						save_geometry_wa_in_layer(gwa, out_layer, int_attributes, double_attributes, string_attributes);
+						save_geometry_wa_in_layer(gwa, wm, out_layer, int_attributes, double_attributes, string_attributes);
 				}
 				out_layer->SyncToDisk();
 
@@ -260,17 +260,20 @@ namespace LxGeo
 			/**
 			This will check if a feature with the same id already exists, else create a new one
 			*/
-			void save_geometry_wa_in_layer(const Geometries_with_attributes<geom_type>& gwa, OGRLayer* out_layer,
+			void save_geometry_wa_in_layer(const Geometries_with_attributes<geom_type>& gwa, WriteMode wm, OGRLayer* out_layer,
 				const std::list<std::string>& int_attributes,
 				const std::list<std::string>& double_attributes,
 				const std::list<std::string>& string_attributes) const {
 				OGRFeature* feature;
-				feature = out_layer->GetFeature(gwa.get_int_attribute(GeoVector<geom_type>::ID_FIELD_NAME));
-
-				bool new_feature_to_create = (feature == NULL);
-				if (new_feature_to_create)
+				bool new_feature_to_create=true;
+				if (wm == WriteMode::update) {
+					feature = out_layer->GetFeature(gwa.get_int_attribute(GeoVector<geom_type>::ID_FIELD_NAME));
+					new_feature_to_create = (feature != NULL);
+					if (new_feature_to_create)
+						feature = OGRFeature::CreateFeature(out_layer->GetLayerDefn());
+				}else{
 					feature = OGRFeature::CreateFeature(out_layer->GetLayerDefn());
-
+				}
 				ogr_geom_type ogr_geometry = transform_B2OGR_geometry<geom_type, ogr_geom_type>(gwa.get_definition());
 				feature->SetGeometry(&ogr_geometry);
 				for (const std::string& name : int_attributes) {
