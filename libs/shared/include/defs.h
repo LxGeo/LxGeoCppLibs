@@ -90,7 +90,7 @@ namespace LxGeo
 
 		LX_GEO_FACTORY_SHARED_API std::shared_ptr<GDALDataset> load_gdal_dataset_shared_ptr(const std::string& raster_file_path);
 
-		LX_GEO_FACTORY_SHARED_API std::shared_ptr<GDALDataset> load_gdal_vector_dataset_shared_ptr(const std::string& vector_file_path);
+		LX_GEO_FACTORY_SHARED_API std::shared_ptr<GDALDataset> load_gdal_vector_dataset_shared_ptr(const std::string& vector_file_path, int extra_flags=0);
 
 		template <typename env_type>
 		struct envelopeGet {
