@@ -1,6 +1,6 @@
 #pragma once
 #include "defs.h"
-
+#include "lightweight/geoimage.h"
 
 
 namespace LxGeo
@@ -40,12 +40,9 @@ namespace LxGeo
 
 			RProfile() {};
 
-			RProfile(int _width, int _height, int _count, const double _geotransform[6], GDALDataType _dtype, char* _crs_wkt=nullptr, std::string _driver_name = "GTiff") :
-				width(_width), height(_height), count(_count), dtype(_dtype), driver_name(_driver_name){
+			RProfile(int _width, int _height, int _count, const double _geotransform[6], GDALDataType _dtype, std::string _s_crs_wkt ="", std::string _driver_name = "GTiff") :
+				width(_width), height(_height), count(_count), dtype(_dtype), driver_name(_driver_name), s_crs_wkt(_s_crs_wkt){
 				memcpy(geotransform, _geotransform, sizeof(double) * 6);
-				if (_crs_wkt != nullptr) {
-					s_crs_wkt = std::string(_crs_wkt);
-				}
 			}
 
 			RProfile(const RProfile& ref_profile) {
@@ -99,6 +96,17 @@ namespace LxGeo
 				return RProfile(width, height, band_count, geotransform, raster_data_type, crs_wkt);				
 			}
 
+			static RProfile from_file(std::string file_path) {
+				auto gdal_dataset = load_gdal_dataset_shared_ptr(file_path);
+				return RProfile::from_gdal_dataset(gdal_dataset);
+			}
+
+			template <typename cv_mat_type>
+			static RProfile from_geoimage(GeoImage<cv_mat_type> in_gimg, std::string s_crs_wkt="") {
+				RProfile out_rprofile = RProfile(in_gimg.image.cols, in_gimg.image.rows, in_gimg.image.channels(), in_gimg.geotransform, KGDAL2CV::opencv2gdal(in_gimg.image.type()), s_crs_wkt);
+				return out_rprofile;
+			}
+
 			static RProfile from_extents(Boost_Box_2 extents, double gsd_x, double gsd_y, int count = 1, GDALDataType _dtype = GDALDataType::GDT_Byte, char* _crs_wkt = nullptr, std::string _driver_name = "GTiff") {
 				int width = (extents.max_corner().get<0>() - extents.min_corner().get<0>()) / abs(gsd_x);
 				int height = (extents.max_corner().get<1>() - extents.min_corner().get<1>()) / abs(gsd_y);
@@ -110,7 +118,7 @@ namespace LxGeo
 				return RProfile(width, height, count, geotransform, _dtype, _crs_wkt, _driver_name);
 			}
 
-			Boost_Box_2 to_box_extents() {
+			Boost_Box_2 to_box_extents() const {
 
 				// This function is not absolute (may be changed to take into account rotated getransforms)
 				double x1 = geotransform[0], x2 = x1 + geotransform[1] * width;
@@ -125,28 +133,28 @@ namespace LxGeo
 
 				flags = flags & ~except_flags;
 				// iterate through members || flags == 0 => all members
-				if (flags | RProfileCompFlags::width) {
+				if (flags & RProfileCompFlags::width) {
 					if (target_profile.width != width) {
 						std::cout << "profiles width doesn't match" << std::endl;
 						return false;
 					}
 				}
 
-				if (flags | RProfileCompFlags::height) {
+				if (flags & RProfileCompFlags::height) {
 					if (target_profile.height != height) {
 						std::cout << "Profiles height doesn't match" << std::endl;
 						return false;
 					}
 				}
 
-				if (flags | RProfileCompFlags::count) {
+				if (flags & RProfileCompFlags::count) {
 					if (target_profile.count != count) {
 						std::cout << "Profiles band count doesn't match" << std::endl;
 						return false;
 					}
 				}
 
-				if (flags | RProfileCompFlags::crs_wkt) {
+				if (flags & RProfileCompFlags::crs_wkt) {
 					if (!s_crs_wkt.empty() || !target_profile.s_crs_wkt.empty()) {
 						OGRSpatialReference spatial_refrence, t_spatial_refrence;
 						spatial_refrence.importFromWkt(const_cast<char*>(s_crs_wkt.c_str()));
@@ -159,28 +167,28 @@ namespace LxGeo
 					}
 				}
 
-				if (flags | RProfileCompFlags::driver_name) {
+				if (flags & RProfileCompFlags::driver_name) {
 					if (target_profile.driver_name.compare(driver_name)) {
 						std::cout << "Profiles drivers names doesn't match" << std::endl;
 						return false;
 					}
 				}
 
-				if (flags | RProfileCompFlags::dtype) {
+				if (flags & RProfileCompFlags::dtype) {
 					if (target_profile.dtype != dtype) {
 						std::cout << "Profiles data types doesn't match" << std::endl;
 						return false;
 					}
 				}
 
-				if (flags | RProfileCompFlags::geotransform) {
+				if (flags & RProfileCompFlags::geotransform) {
 					if (!std::equal(std::begin(target_profile.geotransform), std::end(target_profile.geotransform), std::begin(geotransform))) {
 						std::cout << "Profiles geotransform doesn't match" << std::endl;
 						return false;
 					}
 				}
 
-				if (flags | RProfileCompFlags::gsd) {
+				if (flags & RProfileCompFlags::gsd) {
 					if (target_profile.gsd() != this->gsd()) {
 						std::cout << "Profiles ground sampling distances doesn't match" << std::endl;
 						return false;
