@@ -134,6 +134,44 @@ namespace LxGeo
 				return std::shared_ptr<GDALDataset>(new_dataset, GDALClose);
 			}
 
+			void update_gdal_dataset(std::shared_ptr<GDALDataset> vector_dataset) {
+
+				int layer_idx = 0;
+				for (auto& c_layer_def : layers_def) {
+					// TODO: change layer acquisiation to be by name instead of index
+					OGRLayer* layer_to_update = vector_dataset->GetLayer(layer_idx);
+					if (layer_to_update->GetFeatureCount() > 0) {
+						assert(layer_to_update->GetGeomType() == c_layer_def.second.wkb_type && "Different geometry type!");
+						// TODO: check spatial reference system
+						/*OGRSpatialReference* to_update_srs = layer_to_update->GetSpatialRef(); 
+						const OGRSpatialReference* new_srs = vector_dataset->GetSpatialRef();
+						assert(to_update_srs->IsSame(new_srs) && "Different spatial reference system!");
+						*/
+					}
+
+					for (const std::string& name : c_layer_def.second.int_attributes_names) {
+						OGRFieldDefn o_field(name.c_str(), OFTInteger);
+						if (layer_to_update->CreateField(&o_field) != OGRERR_NONE) {
+							throw std::logic_error("Error : field creation failed.");
+						}
+					}
+					for (const std::string& name : c_layer_def.second.double_attributes_names) {
+						OGRFieldDefn o_field(name.c_str(), OFTReal);
+						if (layer_to_update->CreateField(&o_field) != OGRERR_NONE) {
+							throw std::logic_error("Error : field creation failed.");
+						}
+					}
+					for (const std::string& name : c_layer_def.second.string_attributes_names) {
+						OGRFieldDefn o_field(name.c_str(), OFTString);
+						if (layer_to_update->CreateField(&o_field) != OGRERR_NONE) {
+							throw std::logic_error("Error : field creation failed.");
+						}
+					}
+					layer_idx++;
+				}
+
+			}
+
 			static VProfile from_gdal_dataset(std::shared_ptr<GDALDataset> gdal_dataset) {
 				
 				std::map<std::string, LayerDef> out_layers_def;
