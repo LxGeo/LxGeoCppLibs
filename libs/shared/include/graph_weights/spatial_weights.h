@@ -57,6 +57,14 @@ namespace LxGeo
 				init_rtree();
 			};
 
+			SpatialWeights(const std::vector<geom_type>& input_geometries) : SpatialIndexedGeometryContainer<geom_type>() {
+				_reset();
+				geometries_container.reserve(input_geometries.size());
+				for (auto& c_geom : input_geometries)
+					geometries_container.push_back(Geometries_with_attributes<geom_type>(c_geom));
+				init_rtree();
+			};
+
 			SpatialWeights(const std::vector<Geometries_with_attributes<geom_type>>& input_geometries, Boost_RTree& ref_rtree) :
 				SpatialIndexedGeometryContainer<geom_type>(ref_rtree), geometries_container(input_geometries) {
 				_reset();
@@ -162,7 +170,7 @@ namespace LxGeo
 			}
 
 		private:
-			size_t length() override { return geometries_container.size(); }
+			size_t length() const override { return geometries_container.size(); }
 			geom_type& operator[](int offset) override { return geometries_container[offset].get_definition(); }
 			const geom_type& operator[](int offset) const override { return geometries_container[offset].get_definition(); }
 			

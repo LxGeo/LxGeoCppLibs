@@ -8,7 +8,7 @@ namespace LxGeo
 {
 	namespace GeometryFactoryShared
 	{
-
+		/*
 		class PolygonSpatialWeights : public SpatialWeights<Boost_Polygon_2> {
 
 		public:
@@ -58,6 +58,6 @@ namespace LxGeo
 			~PolygonSpatialWeights() {};
 
 		};
-
+		*/
 	}
 }
