@@ -28,8 +28,10 @@ namespace LxGeo
 
 				if (md == WriteMode::create | md == WriteMode::overwrite)
 					vector_dataset = vector_profile.to_gdal_dataset(vector_file_path);
-				else
-					vector_dataset = std::shared_ptr<GDALDataset>((GDALDataset*)GDALOpen(vector_file_path.c_str(), GA_Update), GDALClose);
+				else {
+					vector_dataset = load_gdal_vector_dataset_shared_ptr(vector_file_path, GDAL_OF_UPDATE);
+					vector_profile.update_gdal_dataset(vector_dataset);
+				}
 			}
 
 			template <typename geom_type>
