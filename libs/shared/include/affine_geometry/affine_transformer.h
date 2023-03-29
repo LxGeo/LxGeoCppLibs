@@ -91,5 +91,15 @@ namespace LxGeo
 			return out_geom;
 		}
 
+		auto geotransform_to_matrix_transformer(double geotransform[6], double x_shift = 0.0, double y_shift = 0.0) {
+			return bg::strategy::transform::matrix_transformer<double, 2, 2>(geotransform[1], geotransform[2], geotransform[0] + x_shift,
+				geotransform[4], geotransform[5], geotransform[3] + y_shift,
+				0.0, 0.0, 1.0);
+		}
+
+		auto geotransform_to_inv_matrix_transformer(double geotransform[6]) {
+			return bg::strategy::transform::inverse_transformer<double, 2, 2>(geotransform_to_matrix_transformer(geotransform));
+		}
+
 	}
 }
