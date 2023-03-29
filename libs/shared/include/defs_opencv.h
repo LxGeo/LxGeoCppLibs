@@ -5,6 +5,8 @@
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudafilters.hpp>
 #include "opencv2/cudawarping.hpp"
+#include <opencv2/cudastereo.hpp>
+#include <opencv2/calib3d.hpp>
 #include "export_shared.h"
 
 namespace LxGeo
