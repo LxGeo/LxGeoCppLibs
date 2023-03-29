@@ -87,8 +87,12 @@ namespace LxGeo
 				cv_mat_type non_padded_data(image, view_rect);
 
 				cv_mat_type padded_data;
-				if (left_pad || right_pad || top_pad || down_pad)
-					cv::cuda::copyMakeBorder(non_padded_data, padded_data, top_pad, down_pad, left_pad, right_pad, cv::BORDER_CONSTANT, cv::Scalar(0));
+				if (left_pad || right_pad || top_pad || down_pad) {
+					if constexpr (std::is_same_v < cv_mat_type, cv::cuda::GpuMat>)
+						cv::cuda::copyMakeBorder(non_padded_data, padded_data, top_pad, down_pad, left_pad, right_pad, cv::BORDER_CONSTANT, cv::Scalar(0));
+					else
+						cv::copyMakeBorder(non_padded_data, padded_data, top_pad, down_pad, left_pad, right_pad, cv::BORDER_CONSTANT, cv::Scalar(0));
+				}
 				else
 					padded_data = non_padded_data;
 
@@ -272,7 +276,7 @@ namespace LxGeo
 
 
 		template <typename cv_mat_type>
-		GeoImage<cv_mat_type> rotate(const GeoImage<cv_mat_type>& gimg, const double& rotation_angle) {
+		GeoImage<cv_mat_type> rotate(const GeoImage<cv_mat_type>& gimg, const double& rotation_angle, int warp_mode = cv::INTER_CUBIC) {
 			// get rotation matrix for rotating the image around its center
 			cv::Point2f rotation_center(gimg.image.cols / 2.0, gimg.image.rows / 2.0);
 			cv::Mat rot = cv::getRotationMatrix2D(rotation_center, rotation_angle, 1.0);
@@ -285,11 +289,11 @@ namespace LxGeo
 			GeoImage<cv_mat_type> rotated_gimg;
 			if constexpr (std::is_same_v<cv_mat_type, cv::Mat>) {
 				// Behavior for cpu_matrix type
-				cv::warpAffine(gimg.image, rotated_gimg.image, rot, bbox.size(), cv::INTER_CUBIC);
+				cv::warpAffine(gimg.image, rotated_gimg.image, rot, bbox.size(), warp_mode);
 			}
 			else if constexpr (std::is_same_v<cv_mat_type, cv::cuda::GpuMat>) {
 				// Behavior for gpu_matrix type
-				cv::cuda::warpAffine(gimg.image, rotated_gimg.image, rot, bbox.size(), cv::INTER_CUBIC);
+				cv::cuda::warpAffine(gimg.image, rotated_gimg.image, rot, bbox.size(), warp_mode);
 			}
 
 			// assign updated geotransform
