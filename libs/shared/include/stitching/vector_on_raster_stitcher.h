@@ -26,18 +26,12 @@ namespace LxGeo
 			RasterPixelsStitcher(GeoImage<cv::Mat>& _ref_gimg): ref_gimg(_ref_gimg), inv_transformer_matrix(geotransform_to_inv_matrix_transformer(ref_gimg.geotransform))
 			{};
 			
-			double RasterPixelsStitcher::readPolygonPixels(Boost_Polygon_2& resp_polygon, RasterPixelsStitcherStartegy strategy) {
-				if (strategy == RasterPixelsStitcherStartegy::contours) {
+			template <typename cv_pixel_type>
+			std::list<cv_pixel_type> readPolygonPixels(Boost_Polygon_2& resp_polygon, RasterPixelsStitcherStartegy strategy) {
 
-					double total_obj = 0;
-					const double out_of_extent_ground = 1e2;
-					auto line_iter_reader = [&out_of_extent_ground](cv::LineIterator& it, matrix& ref_mat)->double {
-						double sum = 0;
-						for (int i = 0; i < it.count; i++, ++it) {
-							sum += ref_mat.at<float>(it.pos());
-						}
-						return sum;// / double(it.count);
-					};
+				std::list<cv_pixel_type> out_pixels_list;
+
+				if (strategy == RasterPixelsStitcherStartegy::contours) {
 
 					Boost_Discrete_Polygon_2 resp_polygon_pixel_coords = affine_transform_geometry<Boost_Polygon_2, Boost_Discrete_Polygon_2>(
 						resp_polygon, inv_transformer_matrix
@@ -55,27 +49,26 @@ namespace LxGeo
 						for (size_t iter_count = 0; iter_count < c_ring->size() - 1; ++iter_count) {
 							cv::Point st_pt(pts_iter->get<0>(), pts_iter->get<1>()), end_pt(next(pts_iter)->get<0>(), next(pts_iter)->get<1>());
 							cv::LineIterator it(ref_gimg.image, st_pt, end_pt, 8);
-							total_obj += (*it != nullptr) ? line_iter_reader(it, ref_gimg.image) : out_of_extent_ground;
+							if (*it != nullptr) {
+								for (int i = 0; i < it.count; i++, ++it) {
+									out_pixels_list.push_back(ref_gimg.image.at<cv_pixel_type>(it.pos()));
+								}
+							}
 							pts_iter++;
 						}
-					}
-
-					return total_obj;
-
+					}					
 				}
 
-				if (strategy == RasterPixelsStitcherStartegy::filled_polygon) {
-					double total_obj = 0;
-					using pixel_type = cv::Vec<float, 1>;
+				else if (strategy == RasterPixelsStitcherStartegy::filled_polygon) {
 
-					auto ring_pixels_aggregator = [](std::list<pixel_type>& values_list) -> float {
+					auto ring_pixels_aggregator = [](std::list<cv_pixel_type>& values_list) -> float {
 						// (temporary) returns sum with nan turned to max_val
 						int null_count = 0;
 						float max_val = 0.0;
 						float sum = 0.0;
 
 						for (auto& c_pixel : values_list) {
-							float c_val = c_pixel[0];
+							float c_val = c_pixel;
 							if (isnan(c_val)) null_count += 1;
 							else {
 								sum += c_val;
@@ -94,7 +87,6 @@ namespace LxGeo
 					Boost_Discrete_Point_2 min_pixel_corner = envelop.min_corner();
 					Boost_Discrete_Point_2 max_pixel_corner = envelop.max_corner();
 
-					std::list<pixel_type> loaded_pixels;
 					for (size_t c_row = min_pixel_corner.get<1>(); c_row <= max_pixel_corner.get<1>(); c_row++) {
 
 						if (c_row < 0 || c_row >= ref_gimg.image.rows)
@@ -122,19 +114,17 @@ namespace LxGeo
 									}
 								}
 								if (!is_within_hole)
-									loaded_pixels.push_back(ref_gimg.image.ptr<pixel_type>(c_row)[c_col]);
+									out_pixels_list.push_back(ref_gimg.image.at<cv_pixel_type>(c_row,c_col));
 							}
 						}
 					}
-
-
-					total_obj += ring_pixels_aggregator(loaded_pixels);
-					return total_obj;
 
 				}
 
 				else
 					throw std::exception("Only contours and filled_polygon strategies are implemented!");
+
+				return out_pixels_list;
 			}
 
 		public:
