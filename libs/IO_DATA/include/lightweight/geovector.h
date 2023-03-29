@@ -251,26 +251,32 @@ namespace LxGeo
 				for (size_t i = 0; i < geometries_container.size(); ++i) {
 					const Geometries_with_attributes<geom_type>& gwa = geometries_container[i];
 					if (filter_fn(gwa))
-						add_geometry_wa_to_layer(gwa, out_layer, int_attributes, double_attributes, string_attributes);
+						save_geometry_wa_in_layer(gwa, out_layer, int_attributes, double_attributes, string_attributes);
 				}
 				out_layer->SyncToDisk();
 
 			}
 
-			void add_geometry_wa_to_layer(const Geometries_with_attributes<geom_type>& gwa, OGRLayer* out_layer, 
-				const std::list<std::string>& int_attributes, 
+			/**
+			This will check if a feature with the same id already exists, else create a new one
+			*/
+			void save_geometry_wa_in_layer(const Geometries_with_attributes<geom_type>& gwa, OGRLayer* out_layer,
+				const std::list<std::string>& int_attributes,
 				const std::list<std::string>& double_attributes,
 				const std::list<std::string>& string_attributes) const {
-				ogr_geom_type ogr_geometry = transform_B2OGR_geometry<geom_type, ogr_geom_type>(gwa.get_definition());
 				OGRFeature* feature;
-				feature = OGRFeature::CreateFeature(out_layer->GetLayerDefn());
+				feature = out_layer->GetFeature(gwa.get_int_attribute(GeoVector<geom_type>::ID_FIELD_NAME));
 
+				bool new_feature_to_create = (feature == NULL);
+				if (new_feature_to_create)
+					feature = OGRFeature::CreateFeature(out_layer->GetLayerDefn());
+
+				ogr_geom_type ogr_geometry = transform_B2OGR_geometry<geom_type, ogr_geom_type>(gwa.get_definition());
 				feature->SetGeometry(&ogr_geometry);
 				for (const std::string& name : int_attributes) {
 					int x = gwa.get_int_attribute(name);
 					feature->SetField(name.c_str(), x);
 				}
-
 				for (const std::string& name : double_attributes) {
 					double x = gwa.get_double_attribute(name);
 					feature->SetField(name.c_str(), x);
@@ -280,10 +286,16 @@ namespace LxGeo
 					feature->SetField(name.c_str(), x.c_str());
 				}
 
-				// Writes new feature
-				OGRErr error = out_layer->CreateFeature(feature);
-				if (error != OGRERR_NONE) std::cout << "Error code : " << int(error) << std::endl;
-				OGRFeature::DestroyFeature(feature);
+				if (new_feature_to_create) {
+					// Writes new feature
+					OGRErr error = out_layer->CreateFeature(feature);
+					if (error != OGRERR_NONE) std::cout << "Error code : " << int(error) << std::endl;
+					OGRFeature::DestroyFeature(feature);
+				}
+				else {
+					out_layer->SetFeature(feature);
+				}
+
 			}
 
 			void to_file(const std::string& out_file, OGRSpatialReference* spatial_refrence = nullptr,
