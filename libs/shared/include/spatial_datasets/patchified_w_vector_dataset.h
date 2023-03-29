@@ -19,14 +19,14 @@ namespace LxGeo
 
 			WPVectorDataset() {};
 
-			WPVectorDataset(std::string _vector_file_path, VProfile _vector_profile, WriteMode md = WriteMode::create) :
-				vector_file_path(_vector_file_path), vector_profile(_vector_profile) {
+			WPVectorDataset(std::string _vector_file_path, VProfile _vector_profile, WriteMode _wm = WriteMode::create) :
+				vector_file_path(_vector_file_path), vector_profile(_vector_profile), wm(_wm){
 
 				std::string error_message = "WPRasterDataset with mode 'create' for exisiting path !";
-				bool c_error_bool = (md != WriteMode::create || !boost::filesystem::exists(vector_file_path));
+				bool c_error_bool = (wm != WriteMode::create || !boost::filesystem::exists(vector_file_path));
 				assert(c_error_bool && error_message.c_str());
 
-				if (md == WriteMode::create | md == WriteMode::overwrite)
+				if (wm == WriteMode::create | wm == WriteMode::overwrite)
 					vector_dataset = vector_profile.to_gdal_dataset(vector_file_path);
 				else {
 					vector_dataset = load_gdal_vector_dataset_shared_ptr(vector_file_path, GDAL_OF_UPDATE);
@@ -40,7 +40,7 @@ namespace LxGeo
 					size_t c_geom_id = gwa.get_int_attribute(GeoVector<geom_type>::ID_FIELD_NAME);
 					return (saved_ids.find(c_geom_id) == saved_ids.end());
 				};
-				gvec.to_dataset(vector_dataset.get(), "", already_saved_filter);
+				gvec.to_dataset(vector_dataset.get(), wm, "", already_saved_filter);
 				std::transform(gvec.geometries_container.begin(),
 					gvec.geometries_container.end(),
 					std::inserter(saved_ids, saved_ids.begin()),
@@ -50,6 +50,7 @@ namespace LxGeo
 
 		private:
 			std::string vector_file_path;
+			WriteMode wm;
 			std::shared_ptr<GDALDataset> vector_dataset;
 			VProfile vector_profile;
 			std::set<size_t> saved_ids;
