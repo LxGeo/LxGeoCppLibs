@@ -39,28 +39,21 @@ namespace LxGeo
 						return sum;// / double(it.count);
 					};
 
-					std::list<std::list<cv::Point>> polygons_rings_pixels_coords;
-					// rings pixels coords extraction
-					std::list<Boost_Ring_2*> c_polygon_rings;
-					c_polygon_rings.push_back(&resp_polygon.outer());
-					for (Boost_Ring_2& c_inner_ring : resp_polygon.inners()) c_polygon_rings.push_back(&c_inner_ring);
+					Boost_Discrete_Polygon_2 resp_polygon_pixel_coords = affine_transform_geometry<Boost_Polygon_2, Boost_Discrete_Polygon_2>(
+						resp_polygon, inv_transformer_matrix
+						);
 
-					// transform spatial points to pixel coords points
-					for (auto* c_p_ring : c_polygon_rings) {
-						std::list<cv::Point> c_ring_pixels;
-						for (size_t c_pt_idx = 0; c_pt_idx < c_p_ring->size(); ++c_pt_idx) {
-							cv::Point c_pixel_pt;
-							ref_gimg._calc_pixel_coords(c_p_ring->at(c_pt_idx).get<0>(), c_p_ring->at(c_pt_idx).get<1>(), c_pixel_pt.x, c_pixel_pt.y);
-							c_ring_pixels.push_back(c_pixel_pt);
-						}
-						polygons_rings_pixels_coords.push_back(c_ring_pixels);
-					}
-
+					// creating a list of all rings (outer and inners)
+					std::list<Boost_Discrete_Ring_2*> polygons_rings_pixels_coords;
+					polygons_rings_pixels_coords.push_back(&resp_polygon_pixel_coords.outer());
+					for (auto& c_interior_ring : resp_polygon_pixel_coords.inners())
+						polygons_rings_pixels_coords.push_back(&c_interior_ring);
+					
 					// Reading pixels using cv LineIterator
-					for (auto pixel_ring : polygons_rings_pixels_coords) {
-						auto pts_iter = pixel_ring.begin();
-						for (size_t iter_count = 0; iter_count < pixel_ring.size() - 1; ++iter_count) {
-							cv::Point st_pt = (*pts_iter), end_pt = *next(pts_iter);
+					for (auto c_ring : polygons_rings_pixels_coords) {
+						auto pts_iter = c_ring->begin();
+						for (size_t iter_count = 0; iter_count < c_ring->size() - 1; ++iter_count) {
+							cv::Point st_pt(pts_iter->get<0>(), pts_iter->get<1>()), end_pt(next(pts_iter)->get<0>(), next(pts_iter)->get<1>());
 							cv::LineIterator it(ref_gimg.image, st_pt, end_pt, 8);
 							total_obj += (*it != nullptr) ? line_iter_reader(it, ref_gimg.image) : out_of_extent_ground;
 							pts_iter++;
