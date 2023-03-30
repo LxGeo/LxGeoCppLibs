@@ -20,7 +20,8 @@ namespace LxGeo
 				dtype = 1 << 5,
 				crs_wkt = 1 << 6,
 				gsd = 1 << 7,
-				ALL = width | height | count | driver_name | geotransform | dtype | crs_wkt | gsd
+				no_data = 1 << 8,
+				ALL = width | height | count | driver_name | geotransform | dtype | crs_wkt | gsd | no_data
 			};
 			inline RProfileCompFlags operator|(RProfileCompFlags a, RProfileCompFlags b)
 			{
@@ -37,12 +38,17 @@ namespace LxGeo
 			double geotransform[6];
 			GDALDataType dtype;
 			std::string s_crs_wkt;
+			std::optional<double> no_data;
 
 			RProfile() {};
 
-			RProfile(int _width, int _height, int _count, const double _geotransform[6], GDALDataType _dtype, std::string _s_crs_wkt ="", std::string _driver_name = "GTiff") :
+			RProfile(int _width, int _height, int _count, const double _geotransform[6],
+				GDALDataType _dtype, std::string _s_crs_wkt ="", std::string _driver_name = "GTiff",
+				double _no_data=DBL_MAX) :
 				width(_width), height(_height), count(_count), dtype(_dtype), driver_name(_driver_name), s_crs_wkt(_s_crs_wkt){
 				memcpy(geotransform, _geotransform, sizeof(double) * 6);
+				if (_no_data != DBL_MAX)
+					no_data = _no_data;
 			}
 
 			RProfile(const RProfile& ref_profile) {
@@ -53,6 +59,7 @@ namespace LxGeo
 				dtype = ref_profile.dtype;
 				memcpy(geotransform, ref_profile.geotransform, sizeof(double) * 6);
 				s_crs_wkt = std::string(ref_profile.s_crs_wkt);
+				no_data = ref_profile.no_data;
 			};
 
 			~RProfile() {}
@@ -73,10 +80,15 @@ namespace LxGeo
 					spatial_refrence.importFromWkt(const_cast<char*>(s_crs_wkt.c_str()));
 					new_dataset->SetSpatialRef(&spatial_refrence);
 				}
+				if (no_data.has_value()) {
+					for (size_t band_idx = 1; band_idx <= count; band_idx++)
+						new_dataset->GetRasterBand(band_idx)->SetNoDataValue(no_data.value());
+				}
 				return std::shared_ptr<GDALDataset>(new_dataset, GDALClose);
 			}
 
 			static RProfile from_gdal_dataset(std::shared_ptr<GDALDataset> gdal_dataset) {
+				std::string driver_name(gdal_dataset->GetDriverName());
 				int width = gdal_dataset->GetRasterXSize();
 				int height = gdal_dataset->GetRasterYSize();
 				int band_count = gdal_dataset->GetRasterCount();
@@ -92,8 +104,10 @@ namespace LxGeo
 					// temporary fix for the north facing rasters
 					geotransform[5] = -1.0;
 				}
+				int raster_has_nodata;
+				double nodata = gdal_dataset->GetRasterBand(1)->GetNoDataValue(&raster_has_nodata);
 				GDALDataType raster_data_type = gdal_dataset->GetRasterBand(1)->GetRasterDataType();
-				return RProfile(width, height, band_count, geotransform, raster_data_type, crs_wkt);				
+				return RProfile(width, height, band_count, geotransform, raster_data_type, crs_wkt, driver_name, (raster_has_nodata)? nodata: DBL_MAX);
 			}
 
 			static RProfile from_file(std::string file_path) {
@@ -191,6 +205,15 @@ namespace LxGeo
 				if (flags & RProfileCompFlags::gsd) {
 					if (target_profile.gsd() != this->gsd()) {
 						std::cout << "Profiles ground sampling distances doesn't match" << std::endl;
+						return false;
+					}
+				}
+
+				if (flags & RProfileCompFlags::no_data) {
+					if (target_profile.no_data.has_value() != this->no_data.has_value() ||
+						target_profile.no_data.value() != this->no_data.value()
+						) {
+						std::cout << "Profiles no_data values doesn't match" << std::endl;
 						return false;
 					}
 				}
