@@ -243,15 +243,10 @@ namespace LxGeo
 				else
 					out_layer = vector_dataset->GetLayerByName(out_layer_name.c_str());
 
-				std::list<std::string> int_attributes, double_attributes, string_attributes;
-				geometries_container[0].get_list_of_int_attributes(int_attributes);
-				geometries_container[0].get_list_of_double_attributes(double_attributes);
-				geometries_container[0].get_list_of_string_attributes(string_attributes);
-
 				for (size_t i = 0; i < geometries_container.size(); ++i) {
 					const Geometries_with_attributes<geom_type>& gwa = geometries_container[i];
 					if (filter_fn(gwa))
-						save_geometry_wa_in_layer(gwa, wm, out_layer, int_attributes, double_attributes, string_attributes);
+						save_geometry_wa_in_layer(gwa, wm, out_layer);
 				}
 				out_layer->SyncToDisk();
 
@@ -260,10 +255,7 @@ namespace LxGeo
 			/**
 			This will check if a feature with the same id already exists, else create a new one
 			*/
-			void save_geometry_wa_in_layer(const Geometries_with_attributes<geom_type>& gwa, WriteMode wm, OGRLayer* out_layer,
-				const std::list<std::string>& int_attributes,
-				const std::list<std::string>& double_attributes,
-				const std::list<std::string>& string_attributes) const {
+			void save_geometry_wa_in_layer(const Geometries_with_attributes<geom_type>& gwa, WriteMode wm, OGRLayer* out_layer) const {
 				OGRFeature* feature;
 				bool new_feature_to_create=true;
 				if (wm == WriteMode::update) {
@@ -276,6 +268,11 @@ namespace LxGeo
 				}
 				ogr_geom_type ogr_geometry = transform_B2OGR_geometry<geom_type, ogr_geom_type>(gwa.get_definition());
 				feature->SetGeometry(&ogr_geometry);
+
+				std::list<std::string> int_attributes, double_attributes, string_attributes;
+				gwa.get_list_of_int_attributes(int_attributes);
+				gwa.get_list_of_double_attributes(double_attributes);
+				gwa.get_list_of_string_attributes(string_attributes);
 				for (const std::string& name : int_attributes) {
 					int x = gwa.get_int_attribute(name);
 					feature->SetField(name.c_str(), x);
