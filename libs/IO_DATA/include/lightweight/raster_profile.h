@@ -1,6 +1,7 @@
 #pragma once
 #include "defs.h"
-#include "lightweight/geoimage.h"
+#include "export_io_data.h"
+#include "GDAL_OPENCV_IO.h"
 
 
 namespace LxGeo
@@ -8,6 +9,9 @@ namespace LxGeo
 
 	namespace IO_DATA
 	{
+
+		template <typename cv_mat_type>
+		struct GeoImage;
 
 		namespace ns_RProfileCompFlags
 		{	enum RProfileCompFlags
@@ -44,11 +48,9 @@ namespace LxGeo
 
 			RProfile(int _width, int _height, int _count, const double _geotransform[6],
 				GDALDataType _dtype, std::string _s_crs_wkt ="", std::string _driver_name = "GTiff",
-				double _no_data=DBL_MAX) :
-				width(_width), height(_height), count(_count), dtype(_dtype), driver_name(_driver_name), s_crs_wkt(_s_crs_wkt){
+				std::optional<double> _no_data = std::optional<double>()) :
+				width(_width), height(_height), count(_count), dtype(_dtype), driver_name(_driver_name), s_crs_wkt(_s_crs_wkt), no_data(_no_data){
 				memcpy(geotransform, _geotransform, sizeof(double) * 6);
-				if (_no_data != DBL_MAX)
-					no_data = _no_data;
 			}
 
 			RProfile(const RProfile& ref_profile) {
@@ -105,9 +107,10 @@ namespace LxGeo
 					geotransform[5] = -1.0;
 				}
 				int raster_has_nodata;
-				double nodata = gdal_dataset->GetRasterBand(1)->GetNoDataValue(&raster_has_nodata);
+				double nodata_value = gdal_dataset->GetRasterBand(1)->GetNoDataValue(&raster_has_nodata);
+				std::optional<double> nodata; if (raster_has_nodata) nodata;
 				GDALDataType raster_data_type = gdal_dataset->GetRasterBand(1)->GetRasterDataType();
-				return RProfile(width, height, band_count, geotransform, raster_data_type, crs_wkt, driver_name, (raster_has_nodata)? nodata: DBL_MAX);
+				return RProfile(width, height, band_count, geotransform, raster_data_type, crs_wkt, driver_name, nodata);
 			}
 
 			static RProfile from_file(std::string file_path) {
@@ -116,8 +119,11 @@ namespace LxGeo
 			}
 
 			template <typename cv_mat_type>
-			static RProfile from_geoimage(GeoImage<cv_mat_type> in_gimg, std::string s_crs_wkt="") {
-				RProfile out_rprofile = RProfile(in_gimg.image.cols, in_gimg.image.rows, in_gimg.image.channels(), in_gimg.geotransform, KGDAL2CV::opencv2gdal(in_gimg.image.type()), s_crs_wkt);
+			static RProfile from_geoimage(const GeoImage<cv_mat_type>& in_gimg) {
+				RProfile out_rprofile = RProfile(in_gimg.image.cols, in_gimg.image.rows,
+					in_gimg.image.channels(), in_gimg.geotransform,
+					KGDAL2CV::opencv2gdal(in_gimg.image.type()), in_gimg.crs_wkt, "GTiff", in_gimg.no_data
+					);
 				return out_rprofile;
 			}
 
