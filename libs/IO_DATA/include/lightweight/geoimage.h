@@ -1,5 +1,6 @@
 #pragma once
 #include "defs.h"
+#include "lightweight/raster_profile.h"
 #include "export_io_data.h"
 #include "GDAL_OPENCV_IO.h"
 #include "coords.h"
@@ -17,6 +18,8 @@ namespace LxGeo
 		struct GeoImage {
 			cv_mat_type image;
 			double geotransform[6];
+			std::optional<double> no_data;
+			std::string crs_wkt;
 
 			GeoImage() {};
 			template <typename cv_mat_type__>
@@ -39,7 +42,7 @@ namespace LxGeo
 
 				if constexpr (std::is_same_v<cv_mat_type, cv_mat_type__>) {
 					// behaviour if input image type correspond to class image type
-					image = in_image;
+					image = std::move(in_image); // was simple assignment && changed to move
 				}
 				else {
 					if constexpr (std::is_same_v<cv_mat_type, cv::Mat>) {
@@ -138,7 +141,7 @@ namespace LxGeo
 				return get_view_pixel<cv_mat_type>(col_start, row_start, col_end - col_start, row_end - row_start);
 			}
 
-			void to_file(const std::string& out_file, OGRSpatialReference* spatial_refrence = nullptr, GDALDataType* ptr_out_data_type = nullptr) {
+			/*void to_file(const std::string& out_file, OGRSpatialReference* spatial_refrence = nullptr, GDALDataType* ptr_out_data_type = nullptr) const {
 				KGDAL2CV kgdal2cv;
 
 				// create gdal dataset
@@ -161,7 +164,7 @@ namespace LxGeo
 				to_save_image.convertTo(to_save_image, kgdal2cv.gdal2opencv(out_data_type, image.channels()));
 				kgdal2cv.ImgWriteByGDAL(new_dataset, to_save_image, 0, 0);
 				GDALClose(new_dataset);
-			}
+			}*/
 
 			/**
 			* Writes geoimage to dataset in the right position
@@ -170,7 +173,7 @@ namespace LxGeo
 			* @param no_cropping_allowed a boolean specifying if cropping is allowed else an exception is thrown.
 			* @return void.
 			*/
-			void to_dataset(GDALDataset* gdal_dataset, bool no_cropping_allowed = false) const {
+			void to_dataset(std::shared_ptr<GDALDataset> gdal_dataset, bool no_cropping_allowed = false) const {
 
 				double sink_geotransform[6];
 				gdal_dataset->GetGeoTransform(sink_geotransform);
@@ -200,7 +203,14 @@ namespace LxGeo
 				int sink_xstart = col_start + left_crop, sink_ystart = row_start + top_crop;
 
 				KGDAL2CV kgdal2cv;
-				kgdal2cv.ImgWriteByGDAL(gdal_dataset, cropped_matrix, sink_xstart, sink_ystart);
+				kgdal2cv.ImgWriteByGDAL(gdal_dataset.get(), cropped_matrix, sink_xstart, sink_ystart);
+			}
+
+			std::shared_ptr<GDALDataset> to_file(const std::string& filepath) const {
+				RProfile c_profile = RProfile::from_geoimage(*this);
+				auto dataset_ptr = c_profile.to_gdal_dataset(filepath);
+				this->to_dataset(dataset_ptr);
+				return dataset_ptr;
 			}
 
 			template <typename envelope_type>
@@ -259,6 +269,20 @@ namespace LxGeo
 				return loaded_gimg;
 			}
 
+			static GeoImage<cv_mat_type> from_dataset(std::shared_ptr<GDALDataset> raster_dataset) {
+				GeoImage<cv_mat_type> loaded_gimg;
+				if (raster_dataset->GetGeoTransform(loaded_gimg.geotransform) != CE_None) {
+					// temporary fix for the north facing rasters
+					loaded_gimg.geotransform[5] = -1.0;
+				}
+				KGDAL2CV kgdal2cv;
+				// TODO: this should be changed by adding a method in kgdal to load from dataset
+				std::string file_name(raster_dataset->GetFileList()[0]);
+				cv::Mat loaded_image = kgdal2cv.ImgReadByGDAL(file_name);
+				loaded_gimg.set_image(loaded_image);
+				return loaded_gimg;
+			}
+
 		};
 
 		template <typename cv_mat_type>
@@ -304,6 +328,20 @@ namespace LxGeo
 
 			return rotated_gimg;
 		}
+
+		template <typename cv_mat_type>
+		struct VirtualGeoImage : GeoImage<cv_mat_type> {
+			/*
+			* Constructor using a geoimage & cv::mat transformer & geotransform alteration
+			*/
+			VirtualGeoImage(const GeoImage<cv_mat_type>& _ref_gimg,
+				const std::function<cv_mat_type(cv_mat_type)>& image_transform_functor,
+				const std::function<void(double[6])>& geotransform_alteration_functor = [](double[6]){}
+			) : GeoImage<cv_mat_type>(image_transform_functor(_ref_gimg.image), _ref_gimg.geotransform) {
+				geotransform_alteration_functor(this->geotransform);
+			};
+
+		};
 
 
 	}

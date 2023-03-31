@@ -33,7 +33,7 @@ namespace LxGeo
 
 			template <typename cv_mat_type>
 			void write_geoimage(const GeoImage<cv_mat_type>& gimg) {
-				gimg.to_dataset(raster_dataset.get());
+				gimg.to_dataset(raster_dataset);
 			}
 
 
