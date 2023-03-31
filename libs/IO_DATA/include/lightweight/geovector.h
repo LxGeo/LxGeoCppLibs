@@ -260,7 +260,7 @@ namespace LxGeo
 				bool new_feature_to_create=true;
 				if (wm == WriteMode::update) {
 					feature = out_layer->GetFeature(gwa.get_int_attribute(GeoVector<geom_type>::ID_FIELD_NAME));
-					new_feature_to_create = (feature != NULL);
+					new_feature_to_create = (feature == NULL);
 					if (new_feature_to_create)
 						feature = OGRFeature::CreateFeature(out_layer->GetLayerDefn());
 				}else{
