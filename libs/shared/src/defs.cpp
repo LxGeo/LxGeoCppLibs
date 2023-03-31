@@ -237,12 +237,12 @@ namespace LxGeo
 			bool file_exists = boost::filesystem::exists(raster_file_path);
 			if (!file_exists) {
 				auto err_msg = "File not found at path " + raster_file_path;
-				throw std::exception(err_msg.c_str());
+				throw std::runtime_error(err_msg.c_str());
 			}
 			GDALDataset* dst = (GDALDataset*)GDALOpen(raster_file_path.c_str(), GA_ReadOnly);
 			if (dst == NULL) {
 				auto err_msg = "Unable to open raster dataset in read mode from file " + raster_file_path;
-				throw std::exception(err_msg.c_str());
+				throw std::runtime_error(err_msg.c_str());
 			}
 			return std::shared_ptr<GDALDataset>(dst, GDALClose);
 		};
@@ -251,12 +251,12 @@ namespace LxGeo
 			bool file_exists = boost::filesystem::exists(vector_file_path);
 			if (!file_exists) {
 				auto err_msg = "File not found at path " + vector_file_path;
-				throw std::exception(err_msg.c_str());
+				throw std::runtime_error(err_msg.c_str());
 			}
 			GDALDataset* dst = (GDALDataset*)GDALOpenEx(vector_file_path.c_str(), GDAL_OF_VECTOR | extra_flags, NULL, NULL, NULL);
 			if (dst == NULL) {
 				auto err_msg = "Unable to open raster dataset in read mode from file " + vector_file_path;
-				throw std::exception(err_msg.c_str());
+				throw std::runtime_error(err_msg.c_str());
 			}
 			return std::shared_ptr<GDALDataset>(dst, GDALClose);
 		};
