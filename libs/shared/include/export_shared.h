@@ -3,7 +3,7 @@
 #define LX_GEO_FACTORY_SHARED_API  
 #else
 
-#ifdef LXGEO_FACTORY_SHARED_EXPORTS
+#ifdef LxGeoFactoryShared_EXPORTS
 #define LX_GEO_FACTORY_SHARED_API __declspec(dllexport)
 #else
 #define LX_GEO_FACTORY_SHARED_API __declspec(dllimport)
