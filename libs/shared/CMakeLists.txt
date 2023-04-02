@@ -64,9 +64,35 @@ endif()
 find_package(nlohmann_json CONFIG REQUIRED)
 
 include_directories(include)
-include_directories(../IO_DATA/include)
+include_directories(include/io/)
+#include_directories(../IO_DATA/include)
 add_definitions(-D_CONSOLE -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS)
 
+###############
+
+# Find all header files in the include directory
+file(GLOB_RECURSE HEADERS "include/*.h")
+
+# Find all source files in the src directory
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+
+# Define filters for header and source files based on their directory structure
+foreach(_headerFile IN ITEMS ${HEADERS})
+    file(RELATIVE_PATH _headerRelativePath ${CMAKE_CURRENT_SOURCE_DIR}/include ${_headerFile})
+    get_filename_component(_headerGroup ${_headerRelativePath} DIRECTORY)
+    string(REPLACE "/" "\\" _headerGroup "${_headerGroup}")
+    source_group("Header Files\\${_headerGroup}" FILES "${_headerFile}")
+endforeach()
+
+foreach(_sourceFile IN ITEMS ${SOURCES})
+    file(RELATIVE_PATH _sourceRelativePath ${CMAKE_CURRENT_SOURCE_DIR}/src ${_sourceFile})
+    get_filename_component(_sourceGroup ${_sourceRelativePath} DIRECTORY)
+    string(REPLACE "/" "\\" _sourceGroup "${_sourceGroup}")
+    source_group("Source Files\\${_sourceGroup}" FILES "${_sourceFile}")
+endforeach()
+
+
+###############
 
 file(GLOB_RECURSE 
 	LX_GEO_FACTORY_SHARED_SRC_FILES 
