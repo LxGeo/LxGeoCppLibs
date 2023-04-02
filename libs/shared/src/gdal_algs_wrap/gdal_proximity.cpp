@@ -28,6 +28,7 @@ namespace LxGeo
             
             // create output
             const std::string temp_proximity_raster_path = random_string(5, "/vsimem/", ".tif");
+            //const std::string temp_proximity_raster_path = random_string(5, "C:/Users/geoimage/Pictures/", ".tif");
             RProfile ref_profile = RProfile::from_geoimage<cv::Mat>(input_image);
             ref_profile.dtype = output_type; ref_profile.count = 1;
             auto proximity_raster_dataset = ref_profile.to_gdal_dataset(temp_proximity_raster_path);
@@ -35,24 +36,21 @@ namespace LxGeo
 
             // Rasterize options.
             char** argv = NULL;
-            argv = CSLAddString(argv, "-distunits");
-            argv = CSLAddString(argv, distunits.c_str());
+            argv = CSLAddString(argv, ("DISTUNITS="+ distunits).c_str());
             if (!target_pixels.empty()) {
-                argv = CSLAddString(argv, "-values");
+                std::string comma_sep_values;
                 for(const auto& c_value : target_pixels)
-                    argv = CSLAddString(argv, std::to_string(c_value).c_str());
+                    comma_sep_values += std::to_string(c_value);
+                argv = CSLAddString(argv, ("VALUES="+ comma_sep_values).c_str());
             }
             if (maxdist.has_value()) {
-                argv = CSLAddString(argv, "-maxdist");
-                argv = CSLAddString(argv, std::to_string(maxdist.value()).c_str());
+                argv = CSLAddString(argv, ("MAXDIST="+ std::to_string(maxdist.value())).c_str() );
             }
             if (nodata.has_value()) {
-                argv = CSLAddString(argv, "-nodata");
-                argv = CSLAddString(argv, std::to_string(nodata.value()).c_str());
+                argv = CSLAddString(argv, ("NODATA="+ std::to_string(nodata.value())).c_str());
             }
             if (fixed_buf_val.has_value()) {
-                argv = CSLAddString(argv, "-fixed-buf-val");
-                argv = CSLAddString(argv, std::to_string(fixed_buf_val.value()).c_str());
+                argv = CSLAddString(argv, ("FIXED_BUF_VAL="+ std::to_string(fixed_buf_val.value())).c_str());
             }
 
             for (auto& c_option : extra_options) {
@@ -61,7 +59,8 @@ namespace LxGeo
 
             // Perform algorithm.
             int          usageError;
-            CPLErr err = GDALComputeProximity(in_band, out_band, argv, NULL, nullptr );            
+            CPLErr err = GDALComputeProximity(in_band, out_band, argv, NULL, nullptr );   
+            proximity_raster_dataset->FlushCache();
             //------------------------------
             // Cleanup.
             CSLDestroy(argv);
