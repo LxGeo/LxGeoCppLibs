@@ -28,9 +28,11 @@ namespace LxGeo
 				set_geotransform(_geotransform);
 			}
 
-			GeoImage(const GeoImage& ref_gimg) {
+			GeoImage(const GeoImage& ref_gimg) { // check this for copy leaks
 				image = ref_gimg.image.clone();
 				set_geotransform(ref_gimg.geotransform);
+				no_data = ref_gimg.no_data;
+				crs_wkt = ref_gimg.crs_wkt;
 			};
 
 			void set_geotransform(const double _geotransform[6]) {
@@ -107,6 +109,8 @@ namespace LxGeo
 				GeoImage<cv_mat_type> out_geoimage;
 				out_geoimage.set_image(padded_data);
 				out_geoimage.set_geotransform(_geotransform);
+				out_geoimage.no_data = no_data;
+				out_geoimage.crs_wkt = crs_wkt;
 				return out_geoimage;
 			};
 
@@ -221,6 +225,10 @@ namespace LxGeo
 					// temporary fix for the north facing rasters
 					loaded_gimg.geotransform[5] = -1.0;
 				}
+				int raster_has_nodata;
+				double nodata_value = raster_dataset->GetRasterBand(1)->GetNoDataValue(&raster_has_nodata);
+				std::optional<double> nodata; if (raster_has_nodata) nodata= nodata_value;
+				loaded_gimg.no_data = nodata;
 				GDALClose((GDALDatasetH)raster_dataset);
 				int col_start_pixel, col_end_pixel, row_start_pixel, row_end_pixel;
 
@@ -262,6 +270,10 @@ namespace LxGeo
 					// temporary fix for the north facing rasters
 					loaded_gimg.geotransform[5] = -1.0;
 				}
+				int raster_has_nodata;
+				double nodata_value = raster_dataset->GetRasterBand(1)->GetNoDataValue(&raster_has_nodata);
+				std::optional<double> nodata; if (raster_has_nodata) nodata= nodata_value;
+				loaded_gimg.no_data = nodata;
 				GDALClose((GDALDatasetH)raster_dataset);
 				KGDAL2CV kgdal2cv;
 				cv::Mat loaded_image = kgdal2cv.ImgReadByGDAL(in_file);
@@ -275,6 +287,10 @@ namespace LxGeo
 					// temporary fix for the north facing rasters
 					loaded_gimg.geotransform[5] = -1.0;
 				}
+				int raster_has_nodata;
+				double nodata_value = raster_dataset->GetRasterBand(1)->GetNoDataValue(&raster_has_nodata);
+				std::optional<double> nodata; if (raster_has_nodata) nodata= nodata_value;
+				loaded_gimg.no_data = nodata;
 				KGDAL2CV kgdal2cv;
 				// TODO: this should be changed by adding a method in kgdal to load from dataset
 				std::string file_name(raster_dataset->GetFileList()[0]);
