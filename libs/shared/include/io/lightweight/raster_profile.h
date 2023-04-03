@@ -108,7 +108,7 @@ namespace LxGeo
 				}
 				int raster_has_nodata;
 				double nodata_value = gdal_dataset->GetRasterBand(1)->GetNoDataValue(&raster_has_nodata);
-				std::optional<double> nodata; if (raster_has_nodata) nodata;
+				std::optional<double> nodata; if (raster_has_nodata) nodata= nodata_value;
 				GDALDataType raster_data_type = gdal_dataset->GetRasterBand(1)->GetRasterDataType();
 				return RProfile(width, height, band_count, geotransform, raster_data_type, crs_wkt, driver_name, nodata);
 			}
