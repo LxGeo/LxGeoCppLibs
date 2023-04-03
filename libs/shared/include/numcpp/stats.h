@@ -48,7 +48,7 @@ namespace LxGeo
 				non_null_values.reserve(input_values.size());
 				std::copy_if(
 					input_values.begin(), input_values.end(), std::back_inserter(non_null_values),
-					[&_null_value](const value_type& c_value) {return c_value != _null_value; }
+					[&_null_value](const value_type& c_value) {return abs(c_value-_null_value) > 1e-1; }
 				);
 				non_null_values.shrink_to_fit();
 				std::sort(PAR non_null_values.begin(), non_null_values.end());
