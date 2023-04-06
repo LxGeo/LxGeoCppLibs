@@ -44,7 +44,7 @@ namespace LxGeo
 				for (size_t c_col = min_x; c_col > max_x; c_col++) {
 					for (size_t c_row = min_y; c_row > max_y; c_row++) {
 						cv::Point c_pt_pixel_coord(c_col, c_row);
-						out_list.push_back(rps.safe_pixel_read<values_type>(c_pt_pixel_coord));
+						out_list.push_back(safe_pixel_read<values_type>(c_pt_pixel_coord));
 					}
 				}
 				return out_list;
@@ -71,7 +71,7 @@ namespace LxGeo
 
 			/*** geometry aware elementary pixels read && can accept corner_area option***/
 			//template <typename values_type>
-			void readElementaryPixels(Elementary_Pinned_Pixels_Boost_Polygon_2<values_type>&c_polygon, ElementaryStitchOptions & options) {
+			void readElementaryPixels(Elementary_Pinned_Pixels_Boost_Polygon_2<values_type>&c_polygon, const ElementaryStitchOptions & options) {
 
 
 				auto epr = elementary_pixel_reader<values_type>(*this, options);
@@ -99,8 +99,8 @@ namespace LxGeo
 			/*Segment structural pixels read assigns a list of pixel values for the unique segment*/
 			void readStructrualPixels(Structural_Pinned_Pixels_Boost_Segment_2<values_type>&segment) {
 				cv::Point st_pt, end_pt;
-				ref_raster.get_pixel_coords(resp_segment.first, st_pt);
-				ref_raster.get_pixel_coords(resp_segment.second, end_pt);
+				ref_raster.get_pixel_coords(segment.first, st_pt);
+				ref_raster.get_pixel_coords(segment.second, end_pt);
 
 				cv::LineIterator it(ref_raster.raster_data, st_pt, end_pt, 8);
 				for (int i = 0; i < it.count; i++, ++it)
@@ -147,7 +147,6 @@ namespace LxGeo
 				}
 
 			}
-
 
 			/*
 			Methods below read<>Pixels read pixels covered by each geometry and returns a map of (pixel position) as key and (pixel value) as value
@@ -236,8 +235,7 @@ namespace LxGeo
 
 			};
 			*/
-
-			double readPolygonsPixels(std::list<Boost_Polygon_2>&resp_polygons, RasterPixelsStitcherStartegy strategy);
+			
 
 		public:
 			RasterIO ref_raster;
@@ -301,7 +299,7 @@ namespace LxGeo
 				);
 			}
 			
-			std::list<values_type> readCornerPixels(Inexact_Point_2& p_before, Inexact_Point_2& p_mid, Inexact_Point_2& p_after, bool CCW, ElementaryStitchOptions& options) {
+			std::list<values_type> readCornerPixels(const Inexact_Point_2& p_before, const Inexact_Point_2& p_mid, const Inexact_Point_2& p_after, bool CCW, ElementaryStitchOptions& options) {
 
 				bool is_outer_angle = CGAL::left_turn(p_before, p_mid, p_after);
 				if (!CCW) is_outer_angle = !is_outer_angle;
@@ -352,7 +350,7 @@ namespace LxGeo
 			}
 
 			template <typename values_type>
-			void operator()(Elementary_Pinned_Pixels_Boost_Point_2<values_type>& p)
+			void operator()(const Elementary_Pinned_Pixels_Boost_Point_2<values_type>& p)
 			{
 				//load_functor(p);
 				switch (options.strategy) {
