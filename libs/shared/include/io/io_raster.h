@@ -196,33 +196,31 @@ namespace LxGeo
 				px_row = static_cast<coord_type>((sc_y - py) / ry);
 			}
 
-			IO_DATA_API PixelCoords get_pixel_coords(SpatialCoords& sp) {
-				
+			IO_DATA_API PixelCoords get_pixel_coords(const SpatialCoords& sp) {				
 				PixelCoords result_coords;
 				_calc_pixel_coords(sp.xc, sp.yc, result_coords.col, result_coords.row);
 				return result_coords;
 			}
 
-			IO_DATA_API PixelCoords get_pixel_coords(Boost_Point_2& sp) {
+			IO_DATA_API PixelCoords get_pixel_coords(const Boost_Point_2& sp) {
 
 				PixelCoords result_coords;
 				_calc_pixel_coords(sp.get<0>(), sp.get<1>(), result_coords.col, result_coords.row);
 				return result_coords;
 			}
 
-			IO_DATA_API void get_pixel_coords(Boost_Point_2& sp, cv::Point& cvp) {
-
+			IO_DATA_API void get_pixel_coords(const Boost_Point_2& sp, cv::Point& cvp) {
 				_calc_pixel_coords(sp.get<0>(), sp.get<1>(), cvp.x, cvp.y);
 			}
 
-			IO_DATA_API cv::Point get_cv_point(SpatialCoords& sp) {
+			IO_DATA_API cv::Point get_cv_point(const SpatialCoords& sp) {
 
 				cv::Point result_coords;
 				_calc_pixel_coords(sp.xc, sp.yc, result_coords.x, result_coords.y);
 				return result_coords;
 			}
 
-			IO_DATA_API cv::Point get_cv_point(Boost_Point_2& sp) {
+			IO_DATA_API cv::Point get_cv_point(const Boost_Point_2& sp) {
 
 				cv::Point result_coords;
 				_calc_pixel_coords(sp.get<0>(), sp.get<1>(), result_coords.x, result_coords.y);
