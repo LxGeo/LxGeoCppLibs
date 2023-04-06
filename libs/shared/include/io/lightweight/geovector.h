@@ -21,12 +21,9 @@ namespace LxGeo
 
 			using Boost_Value = typename SpatialIndexedGeometryContainer<geom_type>::Boost_Value;
 			using Boost_RTree = typename SpatialIndexedGeometryContainer<geom_type>::Boost_RTree;
-			/*using ogr_geom_type = typename std::conditional<std::is_same_v<geom_type, Boost_Point_2>, OGRPoint,
-				std::conditional<std::is_same_v<geom_type, Boost_LineString_2>, OGRLineString,
-				std::conditional<std::is_same_v<geom_type, Boost_Polygon_2>, OGRPolygon, OGRGeometry
-				>::type
-				>::type
-			>::type;*/
+
+			using SpatialIndexedGeometryContainer<geom_type>::rtree;
+			using SpatialIndexedGeometryContainer<geom_type>::init_rtree;
 
 			using ogr_geom_type = std::conditional_t<
 				std::is_same_v<geom_type, Boost_Point_2>,
@@ -39,13 +36,13 @@ namespace LxGeo
 
 			GeoVector() {};
 
-			GeoVector(const std::vector<Geometries_with_attributes<geom_type>>& _geometries_container) :SpatialIndexedGeometryContainer<geom_type>(rtree) {
+			GeoVector(const std::vector<Geometries_with_attributes<geom_type>>& _geometries_container) :SpatialIndexedGeometryContainer<geom_type>() {
 				geometries_container.reserve(_geometries_container.size());
 				std::copy(_geometries_container.begin(), _geometries_container.end(), std::back_inserter(geometries_container));
 				init_rtree();
 			}
 
-			GeoVector(const std::vector<geom_type>& _geometries_container) :SpatialIndexedGeometryContainer<geom_type>(rtree) {
+			GeoVector(const std::vector<geom_type>& _geometries_container) :SpatialIndexedGeometryContainer<geom_type>() {
 				geometries_container.reserve(_geometries_container.size());
 				for (const auto& c_geom : _geometries_container) {
 					add_geometry(c_geom);
@@ -129,7 +126,7 @@ namespace LxGeo
 					bg::assign(spatial_envelope, _spatial_envelope);
 				}
 				else if constexpr (std::is_same_v<envelope_type, OGREnvelope>) {
-					spatial_envelope = transform_OGR2B_Polygon(envelopeToPolygon(_spatial_envelope));
+					spatial_envelope = transform_OGR2B_Polygon(&envelopeToPolygon(_spatial_envelope));
 				}
 				return GeoVector::from_file(in_file, layer_name, spatial_envelope, included_fields, excluded_fields, field_rename);
 			}
@@ -298,47 +295,31 @@ namespace LxGeo
 
 			}
 
-			void to_file(const std::string& out_file, OGRSpatialReference* spatial_refrence = nullptr,
-				const std::unordered_set<std::string>& included_fields = {}, const std::unordered_set<std::string>& excluded_fields = { GeoVector<geom_type>::ID_FIELD_NAME }) {
+			void to_file(const std::string& out_file, OGRSpatialReference* spatial_refrence = nullptr) {
 				assert(geometries_container.size() > 0 && "Empty Geovector! No file saved!");
 				std::string s_crs_wkt = "";
 				if (spatial_refrence) {
 					char** crs_wkt;
 					spatial_refrence->exportToWkt(crs_wkt);
-					s_crs_wkt = crs_wkt;
+					s_crs_wkt = std::string(*crs_wkt);
 				}
 				std::string out_layer_name = "";
-				VProfile out_profile = VProfile::from_geometries_wa({ out_layer_name, geometries_container[0] }, s_crs_wkt);
+				VProfile out_profile = VProfile::from_geometries_wa<geom_type>({ { out_layer_name, geometries_container[0]} }, s_crs_wkt);
 				auto vector_dataset = out_profile.to_gdal_dataset(out_file);
-				OGRLayer* out_layer = vector_dataset->GetLayerByName(out_layer_name);
-
-
-
-				std::list<std::string> int_attributes, double_attributes, string_attributes;
-				geometries_container[0].get_list_of_int_attributes(int_attributes);
-				geometries_container[0].get_list_of_double_attributes(double_attributes);
-				geometries_container[0].get_list_of_string_attributes(string_attributes);
-
-				auto layer_fields_names = out_profile.layers_def[out_layer_name].get_fields_names();
-				std::unordered_set<std::string> to_save_fields;
-				if (!included_fields.empty()) {
-					std::set_intersection(layer_fields_names.begin(), layer_fields_names.end(), included_fields.begin(), included_fields.begin(), std::back_inserter(to_save_fields));
-				}
-				if (!excluded_fields.empty()) {
-					std::set_difference(layer_fields_names.begin(), layer_fields_names.end(), excluded_fields.begin(), excluded_fields.begin(), std::back_inserter(to_save_fields));
-				}
-				auto remove_field_name_functor = [](const std::string& a) {return to_save_fields.find(a) == to_save_fields.end()};
-				int_attributes.remove_if(remove_field_name_functor);
-				double_attributes.remove_if(remove_field_name_functor);
-				string_attributes.remove_if(remove_field_name_functor);
+				OGRLayer* out_layer;
+				if (out_layer_name.empty())
+					out_layer = vector_dataset->GetLayer(0);
+				else
+					out_layer = vector_dataset->GetLayerByName(out_layer_name.c_str());
 
 				for (size_t i = 0; i < geometries_container.size(); ++i) {
 					Geometries_with_attributes<geom_type>& gwa = geometries_container[i];
-					add_geometry_wa_to_layer(gwa, out_layer, int_attributes, double_attributes, string_attributes);
+					save_geometry_wa_in_layer(gwa, WriteMode::create, out_layer);
 				}
 				out_layer->SyncToDisk();
 
-			}
+			};
+
 
 		public:
 			std::vector<Geometries_with_attributes<geom_type>> geometries_container;
