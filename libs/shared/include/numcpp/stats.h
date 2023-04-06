@@ -16,22 +16,45 @@ namespace LxGeo
 	namespace numcpp
 	{
 
-		template<typename T,
-			template<typename, typename> class Container,
-			template<typename> class Allocator = std::allocator>
-		double circular_mean(Container<T, Allocator<T>>& container, double min_val=0, double max_val=360) {
-			size_t len = container.size();
-			double polar_x_sum = 0, polar_y_sum=0;
-			for (auto& c_val : container) {
-				double c_rad_val = (c_val - min_val) / (max_val/2) * M_PI;
-				polar_x_sum += std::sin(c_rad_val);
-				polar_y_sum += std::cos(c_rad_val);
+		namespace statsFn {
+			template <typename C_t>
+			requires std::ranges::range<C_t>
+			double circular_mean(const C_t& container, double min_val = 0, double max_val = 360) {
+				size_t len = container.size();
+				double polar_x_sum = 0, polar_y_sum = 0;
+				for (const auto& c_val : container) {
+					double c_rad_val = (c_val - min_val) / (max_val / 2) * M_PI;
+					polar_x_sum += std::sin(c_rad_val);
+					polar_y_sum += std::cos(c_rad_val);
+				}
+				double mean_rad = std::atan2(polar_x_sum / len, polar_y_sum / len);
+				double mean_deg = mean_rad / M_PI * (max_val / 2) + min_val;
+				return mean_deg;
 			}
-			double mean_rad = std::atan2(polar_x_sum / len, polar_y_sum / len);
-			double mean_deg = mean_rad / M_PI * (max_val / 2) + min_val;
-			return mean_deg;
-		}
 
+			template <typename C_t>
+			requires std::ranges::range<C_t>
+			double mean_fn(const C_t& container) {
+				using T = typename std::ranges::range_value_t<C_t>;
+				T sum = std::reduce(PAR container.cbegin(), container.cend());;
+				return sum/container.size();
+			}
+
+
+			template <typename C_t>
+			requires std::ranges::range<C_t>
+			double variance_fn(const C_t& container) {
+				using T = typename std::ranges::range_value_t<C_t>;
+				T mean = mean_fn(container);
+				size_t count = container.size();
+				std::vector<T> diff(count);
+				std::transform(container.begin(), container.end(), diff.begin(), [mean](T x) { return x - mean; });
+				T sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+				T variance = sq_sum / count;
+				return variance;
+			}
+
+		}
 
 		/** DetailedStats is applicable for any type as long as it implements the following methods and operators
 		/* operator==(value_type1, value_type2)
@@ -56,6 +79,8 @@ namespace LxGeo
 			};
 
 		public:
+
+			const std::vector<value_type>& values_vector() const { return non_null_values; }
 			bool empty() { return non_null_values.empty(); }
 			// All statistics will be regarding non_null_values
 			size_t count_null() { return null_count; }
@@ -88,22 +113,7 @@ namespace LxGeo
 			}
 			value_type variance() {
 				if (!m_variance.has_value()) {
-					/* Iterative form (to verify)
-					value_type mean = this->mean();
-					size_t count = this->count();
-					auto variance_func = [&mean, &count](value_type accumulator, const value_type& val) {
-						return accumulator + ((val - mean) * (val - mean) / (count - 1));
-					};
-					value_type accumulator(_zero_value);
-					m_variance = std::accumulate(PAR non_null_values.cbegin(), non_null_values.cend(), accumulator, variance_func);
-					*/
-
-					value_type mean = this->mean();
-					size_t count = this->count();
-					std::vector<double> diff(count);
-					std::transform(non_null_values.begin(), non_null_values.end(), diff.begin(), [mean](value_type x) { return x - mean; });
-					value_type sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-					m_variance = sq_sum/count;
+					m_variance = statsFn::variance_fn(non_null_values);
 				}
 				return m_variance.value();
 			}
