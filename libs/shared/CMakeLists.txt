@@ -1,6 +1,7 @@
 set(LIBRARY_OUTPUT_PATH ../out/${CMAKE_BUILD_TYPE})
 project(LxGeoFactoryShared)
 set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
+set(CMAKE_CXX_STANDARD 20)
 
 if(MSVC)
 

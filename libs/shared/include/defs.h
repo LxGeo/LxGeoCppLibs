@@ -23,6 +23,9 @@
 #include "tqdm/tqdm.h"
 #include "coords.h"
 
+#include <concepts>
+#include <ranges>
+
 //using namespace LxGeo::LxGeoCommon;
 using namespace LxGeo::GeometryFactoryShared;
 
