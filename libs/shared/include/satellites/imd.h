@@ -69,7 +69,7 @@ namespace LxGeo
 				BOOST_FOREACH(pt::ptree::value_type & v, tree.get_child(parent_name)) {
 					values_list.push_back(v.second.get<double>(attribute_name));
 				}
-				double mean_of_angles = numcpp::circular_mean(values_list,0,360);
+				double mean_of_angles = numcpp::statsFn::circular_mean(values_list,0,360);
 				return mean_of_angles;
 			};
 			meta_obj->sunAzimuth = mean_of_attributes("Dimap_Document.Geometric_Data.Use_Area", "Solar_Incidences.SUN_AZIMUTH");
