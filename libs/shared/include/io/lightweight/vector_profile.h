@@ -178,7 +178,6 @@ namespace LxGeo
 				char* crs_wkt =nullptr;
 				std::string driver_name(gdal_dataset->GetDriverName());
 
-				OGRLayer* poLayer;
 				for (OGRLayer* c_layer : gdal_dataset->GetLayers()) {
 					OGRSpatialReference* temp_spatial_ref = c_layer->GetSpatialRef();
 					if (temp_spatial_ref)
@@ -196,7 +195,7 @@ namespace LxGeo
 				out_profile.s_crs_wkt = s_crs_wkt;
 				out_profile.driver_name = driver_name;
 				for (auto& kv : layers_geometries_map)
-					out_profile[k.first] = LayerDef::from_geometry_wa(k.second);
+					out_profile.layers_def[kv.first] = LayerDef::from_geometry_wa(kv.second);
 				return out_profile;
 			}
 
