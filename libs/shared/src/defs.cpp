@@ -65,7 +65,10 @@ namespace LxGeo
 		OGRLinearRing container_transform_vector_Points2OGRRING(const std::vector<Inexact_Point_2>& input_vector) {
 
 			OGRLinearRing aux_ogr_ring;
-			for (const Inexact_Point_2& c_point : input_vector) aux_ogr_ring.addPoint(&OGRPoint(c_point.x(), c_point.y()));
+			for (const Inexact_Point_2& c_point : input_vector) {
+				OGRPoint c_ogr_point(c_point.x(), c_point.y());
+				aux_ogr_ring.addPoint(&c_ogr_point);
+			}
 			return aux_ogr_ring;
 		}
 
@@ -136,10 +139,11 @@ namespace LxGeo
 			return OGRPoint(in_point.get<0>(), in_point.get<1>());
 		}
 
-		OGRLineString transform_B2OGR_LineString(const Boost_Ring_2& in_ring) {
-			OGRLineString ogr_linering;
+		OGRLinearRing transform_B2OGR_LinearRing(const Boost_Ring_2& in_ring) {
+			OGRLinearRing ogr_linering;
 			for (const Boost_Point_2& c_pt : in_ring) {
-				ogr_linering.addPoint(&transform_B2OGR_Point(c_pt));
+				OGRPoint c_ogr_point = transform_B2OGR_Point(c_pt);
+				ogr_linering.addPoint(&c_ogr_point);
 			}
 			return ogr_linering;
 		}
@@ -147,7 +151,8 @@ namespace LxGeo
 		OGRLinearRing transform_B2OGR_Ring(const Boost_Ring_2& in_ring) {
 			OGRLinearRing ogr_ring;
 			for (const Boost_Point_2& c_pt : in_ring) {
-				ogr_ring.addPoint(&transform_B2OGR_Point(c_pt));
+				OGRPoint c_ogr_point = transform_B2OGR_Point(c_pt);
+				ogr_ring.addPoint(&c_ogr_point);
 			}
 			return ogr_ring;
 		}
@@ -172,7 +177,10 @@ namespace LxGeo
 
 		OGRLineString transform_B2OGR_LineString(const Boost_LineString_2& in_linestring) {
 			OGRLineString out_linestring;
-			for (auto& c_pt : in_linestring) out_linestring.addPoint(&transform_B2OGR_Point(c_pt));
+			for (auto& c_pt : in_linestring) {
+				OGRPoint c_ogr_point = transform_B2OGR_Point(c_pt);
+				out_linestring.addPoint(&c_ogr_point);
+			}
 			return out_linestring;
 		}
 
