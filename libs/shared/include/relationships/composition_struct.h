@@ -16,7 +16,7 @@ namespace LxGeo
 
 			template<typename child_proprety, typename parent_proprety>
 			std::vector<parent_proprety> aggregate_children_to_parent(std::vector<child_proprety>& children_properties,
-				std::function< parent_proprety(std::list<child_proprety>) > properties_aggregator) {
+				std::function< parent_proprety(std::list<child_proprety>&) > properties_aggregator) {
 
 				std::vector<parent_proprety> parents_properties; parents_properties.reserve(parent_count);
 
@@ -41,7 +41,7 @@ namespace LxGeo
 			
 			template<typename child_proprety, typename parent_proprety>
 			std::vector<parent_proprety> aggregate_children_to_parent(std::vector<child_proprety>& children_properties, std::vector<double>& children_weights,
-				std::function< parent_proprety(std::list<child_proprety>, std::list<double>) > properties_aggregator) {
+				std::function< parent_proprety(std::list<child_proprety>&, std::list<double>&) > properties_aggregator) {
 
 				std::vector<parent_proprety> parents_properties; parents_properties.reserve(parent_count);
 
