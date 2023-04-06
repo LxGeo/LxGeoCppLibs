@@ -6,6 +6,7 @@
 #include "graph_weights/spatial_weights.h"
 #include "gdal_algs_wrap/gdal_rasterize.h"
 #include "export_shared.h"
+#include "lightweight/geovector.h"
 
 
 namespace LxGeo
@@ -15,9 +16,9 @@ namespace LxGeo
 
 		// Returns a pair of geoimage of rasterized geometries and a vector of respective labels
 		template <typename geometry_type, typename cv_mat_type>
-		std::pair<IO_DATA::GeoImage<cv_mat_type>, std::vector<size_t>> rasterize_geometries_masks(std::vector<geometry_type>& geometry_container, const IO_DATA::RProfile& reference_raster_profile) {
+		std::pair<IO_DATA::GeoImage<cv_mat_type>, std::vector<size_t>> rasterize_geometries_masks(GeoVector<geometry_type>& gvector, const IO_DATA::RProfile& reference_raster_profile) {
 
-			std::vector<GeoImage<cv_mat_type>> output_masks; output_masks.reserve(geometry_container.size());
+			std::vector<GeoImage<cv_mat_type>> output_masks; output_masks.reserve(gvector.length());
 
 			// map of rasterization label for each geoemetry (labels are of type 2**i)
 			std::vector<size_t> geometries_labels_vector;
@@ -25,12 +26,12 @@ namespace LxGeo
 			// since labels count should not be high (limited by the value type) \\ for example; for 64 geometries we will need 2**64 labels
 			// we reset labels for every connected component
 			std::unordered_map<size_t, size_t> in_component_labels;			
-			SpatialWeights<geometry_type> PSW = SpatialWeights<geometry_type>(geometry_container);
+			SpatialWeights<geometry_type> PSW = SpatialWeights<geometry_type>(gvector.geometries_container, gvector.rtree);
 			WeightsDistanceBandParams wdbp = { 0, true, -1, [](double x)->double { return x; } };
 			PSW.fill_distance_band_graph(wdbp);
 			PSW.run_labeling();
 
-			for (size_t geometry_idx = 0; geometry_idx < geometry_container.size(); geometry_idx++) {
+			for (size_t geometry_idx = 0; geometry_idx < gvector.length(); geometry_idx++) {
 				size_t label_value = 1 << in_component_labels[PSW.component_labels[geometry_idx]];
 				geometries_labels_vector.push_back(label_value);
 				in_component_labels[PSW.component_labels[geometry_idx]] += 1;
@@ -78,13 +79,13 @@ namespace LxGeo
 				printf("Creating Name field failed.\n");
 				exit(1);
 			}
-			for (size_t geometry_idx = 0; geometry_idx < geometry_container.size(); geometry_idx++) {
+			for (size_t geometry_idx = 0; geometry_idx < gvector.length(); geometry_idx++) {
 				OGRFeature* poFeature;
 				poFeature = OGRFeature::CreateFeature(layer->GetLayerDefn());
 				poFeature->SetField("label", int(geometries_labels_vector[geometry_idx]));
 
 
-				poFeature->SetGeometry(&transform_B2OGR_Polygon(geometry_container[geometry_idx]));
+				poFeature->SetGeometry(&transform_B2OGR_Polygon(gvector[geometry_idx]));
 
 				if (layer->CreateFeature(poFeature) != OGRERR_NONE)
 				{
@@ -117,9 +118,10 @@ namespace LxGeo
 			);
 
 			GeoImage<cv_mat_type> masks_geoimage = GeoImage<cv_mat_type>::from_file(raster_output_path);
-				/*for (size_t geometry_idx = 0; geometry_idx < geometry_container.size(); geometry_idx++) {
+			masks_geoimage.set_geotransform(reference_raster_profile.geotransform);
+				/*for (size_t geometry_idx = 0; geometry_idx < gvector.size(); geometry_idx++) {
 					Boost_Box_2 c_geometry_bounds;
-					boost::geometry::envelope(geometry_container[geometry_idx], c_geometry_bounds);
+					boost::geometry::envelope(gvector[geometry_idx], c_geometry_bounds);
 					GeoImage<cv_mat_type> c_geom_mask = masks_geoimage.get_view_spatial<cv_mat_type>(
 						c_geometry_bounds.min_corner().get<0>(), c_geometry_bounds.min_corner().get<1>(),
 						c_geometry_bounds.max_corner().get<0>(), c_geometry_bounds.max_corner().get<1>()
@@ -139,5 +141,5 @@ namespace LxGeo
 			auto output_pair = std::make_pair(masks_geoimage, geometries_labels_vector);
 			return output_pair;
 		}
-	}
+	};
 }
