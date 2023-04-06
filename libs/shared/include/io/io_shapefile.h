@@ -59,7 +59,7 @@ namespace LxGeo
 				if (vector_dataset != NULL) GDALClose(vector_dataset);
 			}
 
-			bool ShapefileIO::create_layer() {
+			bool create_layer() {
 				OGRwkbGeometryType wkb_type;
 				if constexpr (std::is_same_v<geometry_type, Boost_Polygon_2>) {
 					wkb_type = wkbPolygon;
@@ -87,7 +87,7 @@ namespace LxGeo
 				return true;
 			}
 
-			bool ShapefileIO<geometry_type>::create_layer_attributes(std::list<std::string>& int_attributes,
+			bool create_layer_attributes(std::list<std::string>& int_attributes,
 				std::list<std::string>& double_attributes,
 				std::list<std::string>& string_attributes
 			) {
@@ -111,7 +111,7 @@ namespace LxGeo
 				}
 			}
 			
-			bool ShapefileIO<geometry_type>::load_shapefile(std::string shapefile_path, bool lazy_load=true, OGRGeometry* spatial_filter=nullptr) {
+			bool load_shapefile(std::string shapefile_path, bool lazy_load=true, OGRGeometry* spatial_filter=nullptr) {
 
 				vector_dataset = (GDALDataset*)GDALOpenEx(shapefile_path.c_str(), GDAL_OF_VECTOR | GDAL_OF_UPDATE, NULL, NULL, NULL);
 				if (vector_dataset == NULL)
@@ -163,9 +163,9 @@ namespace LxGeo
 				return true;
 			}
 
-			virtual void ShapefileIO::load_geometries() =0;
+			virtual void load_geometries() =0;
 
-			void ShapefileIO::write_shapefile() {
+			void write_shapefile() {
 				assert(geom_type == geometry_type && "Geometry type issues!");
 				//transform geometries_container to Geometries_with_attributes container
 				throw std::exception("Not implemented yet!");
@@ -173,7 +173,7 @@ namespace LxGeo
 				write_shapefile(transformed);
 			}
 
-			void ShapefileIO::write_geometries(std::list<OGRGeometryH>& geoms_to_write) {
+			void write_geometries(std::list<OGRGeometryH>& geoms_to_write) {
 
 				for (OGRGeometryH& c_geom : geoms_to_write) {
 					OGRFeature* feature;
@@ -207,7 +207,7 @@ namespace LxGeo
 				PolygonsShapfileIO() : ShapefileIO<Boost_Polygon_2>() {};
 				PolygonsShapfileIO(std::string out_path, OGRSpatialReference* copy_srs) : ShapefileIO<Boost_Polygon_2>(out_path, copy_srs) { create_layer(); };
 
-				void PolygonsShapfileIO::load_geometries() override {
+				void load_geometries() override {
 					assert(geom_type == wkbPolygon && "Error! Loading Polygon geometries from non Polygon geometry layer!");
 					geometries_container = fill_polygon_container();
 				}
@@ -232,7 +232,7 @@ namespace LxGeo
 					return loaded_polygons;
 				}
 
-				void PolygonsShapfileIO::write_polygon_shapefile(std::vector<Polygon_with_attributes>& polygon_container) {
+				void write_polygon_shapefile(std::vector<Polygon_with_attributes>& polygon_container) {
 					if (polygon_container.empty()) {
 						std::cout << "Warning : empty vector of linestrings. No output written." << std::endl;
 						return;
@@ -278,7 +278,7 @@ namespace LxGeo
 					}
 				};
 
-				void PolygonsShapfileIO::write_shapefile(std::vector<Polygon_with_attributes>& polygon_container) {
+				void write_shapefile(std::vector<Polygon_with_attributes>& polygon_container) {
 					try {
 						write_polygon_shapefile(polygon_container);
 						vector_layer->SyncToDisk();
@@ -297,7 +297,7 @@ namespace LxGeo
 			LineStringShapfileIO() : ShapefileIO<Boost_LineString_2>() {};
 			LineStringShapfileIO(std::string& out_path, OGRSpatialReference* copy_srs) : ShapefileIO<Boost_LineString_2>(out_path, copy_srs) { create_layer(); };
 
-			void LineStringShapfileIO::load_geometries() override {
+			void load_geometries() override {
 				assert(geom_type == wkbLineString && "Error! Loading Linestring geometries from non Linestring geometry layer!");
 				geometries_container = fill_linestring_container();
 			}
@@ -307,7 +307,7 @@ namespace LxGeo
 				return loaded_linestring;
 			}
 
-			void LineStringShapfileIO::write_linestring_shapefile(std::vector<LineString_with_attributes>& linestring_container) {
+			void write_linestring_shapefile(std::vector<LineString_with_attributes>& linestring_container) {
 
 				if (linestring_container.empty()) {
 					std::cout << "Warning : empty vector of linestrings. No output written." << std::endl;
@@ -351,7 +351,7 @@ namespace LxGeo
 
 			};
 
-			void LineStringShapfileIO::write_shapefile(std::vector<LineString_with_attributes>& lines_container) {
+			void write_shapefile(std::vector<LineString_with_attributes>& lines_container) {
 				write_linestring_shapefile(lines_container);
 			};
 		};
@@ -363,7 +363,7 @@ namespace LxGeo
 			PointsShapfileIO() : ShapefileIO<Boost_Point_2>() {};
 			PointsShapfileIO(std::string& out_path, OGRSpatialReference* copy_srs) : ShapefileIO<Boost_Point_2>(out_path, copy_srs) { create_layer(); };
 
-			void PointsShapfileIO::load_geometries() override {
+			void load_geometries() override {
 				assert(geom_type == wkbPoint && "Error! Loading Points geometries from non Point geometry layer!");
 				geometries_container = fill_point_container();
 			}
@@ -373,7 +373,7 @@ namespace LxGeo
 				return loaded_points;
 			}
 
-			void PointsShapfileIO::write_point_shapefile(std::vector<Point_with_attributes>& pts_container) {
+			void write_point_shapefile(std::vector<Point_with_attributes>& pts_container) {
 				if (pts_container.empty()) {
 					std::cout << "Warning : empty vector of point. No output written." << std::endl;
 					return;
@@ -414,7 +414,7 @@ namespace LxGeo
 				}
 			};
 
-			void PointsShapfileIO::write_shapefile(std::vector<Point_with_attributes>& pts_container) {
+			void write_shapefile(std::vector<Point_with_attributes>& pts_container) {
 				write_point_shapefile(pts_container);
 			};
 		};
