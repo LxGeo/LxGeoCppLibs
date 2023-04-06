@@ -303,10 +303,10 @@ namespace LxGeo
 
 		template <typename cv_mat_type>
 		OGREnvelope bounds(const GeoImage<cv_mat_type>& gimg) {
-			double xs = geoTransform[0];
-			double ys = geoTransform[3];
-			double xe = xs + geoTransform[1] * gimg.image.cols;
-			double ye = ys + geoTransform[5] * data.rows;
+			double xs = gimg.geotransform[0];
+			double ys = gimg.geotransform[3];
+			double xe = xs + gimg.geotransform[1] * gimg.image.cols;
+			double ye = ys + gimg.geotransform[5] * gimg.image.rows;
 
 			OGREnvelope bounds;
 			bounds.MinX = std::min<double>(xs, xe); bounds.MaxX = std::max<double>(xs, xe);
