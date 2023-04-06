@@ -6,6 +6,7 @@
 #include "geometries_with_attributes/geometries_with_attributes.h"
 #include "geometries_with_attributes/linestring_with_attributes.h"
 #include "spatial_index/spatial_indexed_geometry_container.h"
+#include "lightweight/geovector.h"
 
 
 namespace LxGeo
@@ -48,6 +49,11 @@ namespace LxGeo
 		class SpatialWeights : public SpatialIndexedGeometryContainer<geom_type> {
 
 			using Boost_Value = typename SpatialIndexedGeometryContainer<geom_type>::Boost_Value;
+			using Boost_RTree = typename SpatialIndexedGeometryContainer<geom_type>::Boost_RTree;
+
+			using SpatialIndexedGeometryContainer<geom_type>::rtree;
+			using SpatialIndexedGeometryContainer<geom_type>::init_rtree;
+
 
 		public:
 			SpatialWeights(): SpatialIndexedGeometryContainer<geom_type>() {};
@@ -65,7 +71,7 @@ namespace LxGeo
 				init_rtree();
 			};
 
-			SpatialWeights(const std::vector<Geometries_with_attributes<geom_type>>& input_geometries, Boost_RTree& ref_rtree) :
+			SpatialWeights(std::vector<Geometries_with_attributes<geom_type>>& input_geometries, Boost_RTree& ref_rtree) :
 				SpatialIndexedGeometryContainer<geom_type>(ref_rtree), geometries_container(input_geometries) {
 				_reset();
 			};
@@ -167,6 +173,11 @@ namespace LxGeo
 					edges_linestrings.push_back(c_edge_container);
 				}
 				return edges_linestrings;
+			}
+
+			static SpatialWeights from_geovector(IO_DATA::GeoVector<geom_type>& in_gvec) {
+				auto spw= SpatialWeights<geom_type>(in_gvec.geometries_container, in_gvec.rtree);
+				return spw;
 			}
 
 		private:
