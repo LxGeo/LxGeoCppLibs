@@ -1,4 +1,3 @@
-set(LIBRARY_OUTPUT_PATH ../out/${CMAKE_BUILD_TYPE})
 project(LxGeoFactoryShared)
 set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
 set(CMAKE_CXX_STANDARD 20)
@@ -6,13 +5,13 @@ set(CMAKE_CXX_STANDARD 20)
 if(MSVC)
 
 	if(DEFINED FORCE_STATIC )
-		message(STATUS "NOTICE: **** Static build for LxGeoFactoryShared *****")
+		message(STATUS "NOTICE: **** Static build for ${PROJECT_NAME} *****")
 		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
-		message(STATUS "NOTICE: **** Adding static flags for LxGeoFactoryShared *****")
+		message(STATUS "NOTICE: **** Adding static flags for ${PROJECT_NAME} *****")
 		add_definitions(-DLXGEO_FACTORY_STATIC)
 	else()
-		message(STATUS "NOTICE: **** Dynamic build for LxGeoFactoryShared *****")
+		message(STATUS "NOTICE: **** Dynamic build for ${PROJECT_NAME} *****")
 		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
 		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 	endif()
@@ -66,7 +65,6 @@ find_package(nlohmann_json CONFIG REQUIRED)
 
 include_directories(include)
 include_directories(include/io/)
-#include_directories(../IO_DATA/include)
 add_definitions(-D_CONSOLE -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS)
 
 ###############
@@ -101,14 +99,14 @@ file(GLOB_RECURSE
 	include/*)
 
 if(DEFINED FORCE_STATIC )
-    add_library(LxGeoFactoryShared 
+    add_library( ${PROJECT_NAME}  
 	STATIC
 	${LX_GEO_FACTORY_SHARED_SRC_FILES})
 else()
-    add_library(LxGeoFactoryShared 
+    add_library( ${PROJECT_NAME}  
 	SHARED
 	${LX_GEO_FACTORY_SHARED_SRC_FILES})
 endif()
 	
-target_link_libraries(LxGeoFactoryShared  ${GDAL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_LOG_LIBRARY} ${OpenCV_LIBS} fmt::fmt fmt::fmt-header-only nlohmann_json::nlohmann_json)
-target_compile_options(LxGeoFactoryShared PRIVATE ${OpenMP_CXX_FLAGS})
+target_link_libraries( ${PROJECT_NAME}   ${GDAL_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_LOG_LIBRARY} ${OpenCV_LIBS} fmt::fmt fmt::fmt-header-only nlohmann_json::nlohmann_json)
+target_compile_options( ${PROJECT_NAME}  PRIVATE ${OpenMP_CXX_FLAGS})

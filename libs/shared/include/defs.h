@@ -1,4 +1,6 @@
 #pragma once
+#define NOMINMAX
+
 #include <iostream>
 #include <utility>
 #include <set>
@@ -25,6 +27,7 @@
 
 #include <concepts>
 #include <ranges>
+#include <Filter.h>
 
 //using namespace LxGeo::LxGeoCommon;
 using namespace LxGeo::GeometryFactoryShared;
