@@ -299,9 +299,9 @@ namespace LxGeo
 				assert(geometries_container.size() > 0 && "Empty Geovector! No file saved!");
 				std::string s_crs_wkt = "";
 				if (spatial_refrence) {
-					char** crs_wkt;
-					spatial_refrence->exportToWkt(crs_wkt);
-					s_crs_wkt = std::string(*crs_wkt);
+					char* pszWKT = NULL;
+					spatial_refrence->exportToWkt(&pszWKT);
+					s_crs_wkt = std::string(pszWKT);
 				}
 				std::string out_layer_name = "";
 				VProfile out_profile = VProfile::from_geometries_wa<geom_type>({ { out_layer_name, geometries_container[0]} }, s_crs_wkt);
@@ -320,6 +320,13 @@ namespace LxGeo
 
 			};
 
+			auto begin() {
+				return geometries_container.begin();
+			}
+
+			auto end() {
+				return geometries_container.end();
+			}
 
 		public:
 			std::vector<Geometries_with_attributes<geom_type>> geometries_container;
