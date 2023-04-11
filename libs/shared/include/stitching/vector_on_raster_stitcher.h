@@ -23,11 +23,11 @@ namespace LxGeo
 
 		public:
 			//RasterPixelsStitcher() {};
-			RasterPixelsStitcher(GeoImage<cv::Mat>& _ref_gimg): ref_gimg(_ref_gimg), inv_transformer_matrix(geotransform_to_inv_matrix_transformer(ref_gimg.geotransform))
+			RasterPixelsStitcher(const GeoImage<cv::Mat>& _ref_gimg): ref_gimg(_ref_gimg), inv_transformer_matrix(geotransform_to_inv_matrix_transformer(ref_gimg.geotransform))
 			{};
 			
 			template <typename cv_pixel_type>
-			std::list<cv_pixel_type> readPolygonPixels(Boost_Polygon_2& resp_polygon, RasterPixelsStitcherStartegy strategy) {
+			std::list<cv_pixel_type> readPolygonPixels(const Boost_Polygon_2& resp_polygon, RasterPixelsStitcherStartegy strategy) {
 
 				std::list<cv_pixel_type> out_pixels_list;
 
@@ -128,7 +128,7 @@ namespace LxGeo
 			}
 
 		public:
-			GeoImage<cv::Mat> ref_gimg;
+			const GeoImage<cv::Mat>& ref_gimg;
 			bg::strategy::transform::inverse_transformer<double, 2, 2> inv_transformer_matrix;
 
 		};
