@@ -23,7 +23,7 @@ namespace LxGeo
 
 			GeoImage() {};
 			template <typename cv_mat_type__>
-			GeoImage(cv_mat_type__& _image, const double _geotransform[6]) {
+			GeoImage(const cv_mat_type__& _image, const double _geotransform[6]) {
 				set_image(_image);
 				set_geotransform(_geotransform);
 			}
@@ -351,7 +351,7 @@ namespace LxGeo
 			* Constructor using a geoimage & cv::mat transformer & geotransform alteration
 			*/
 			VirtualGeoImage(const GeoImage<cv_mat_type>& _ref_gimg,
-				const std::function<cv_mat_type(cv_mat_type)>& image_transform_functor,
+				const std::function<cv_mat_type(const cv_mat_type&)>& image_transform_functor,
 				const std::function<void(double[6])>& geotransform_alteration_functor = [](double[6]){}
 			) : GeoImage<cv_mat_type>(image_transform_functor(_ref_gimg.image), _ref_gimg.geotransform) {
 				geotransform_alteration_functor(this->geotransform);
