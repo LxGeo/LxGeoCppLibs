@@ -145,6 +145,15 @@ namespace LxGeo
 				}
 				return c_percentile.value();
 			}
+			value_type stdev() {
+					return std::sqrt(variance());
+			}
+			value_type coeff_var() {
+				if (mean() == zero_value)
+					return null_value;
+				return stdev() / mean();
+			}
+
 
 		private:
 			optval_t m_sum;
