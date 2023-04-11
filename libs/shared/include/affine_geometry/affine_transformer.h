@@ -32,10 +32,10 @@ namespace LxGeo
 		}
 
 
-		LX_GEO_FACTORY_SHARED_API bg::strategy::transform::matrix_transformer<double, 2, 2> geotransform_to_matrix_transformer(double geotransform[6], double x_shift = 0.0, double y_shift = 0.0);
+		LX_GEO_FACTORY_SHARED_API bg::strategy::transform::matrix_transformer<double, 2, 2> geotransform_to_matrix_transformer(const double geotransform[6], double x_shift = 0.0, double y_shift = 0.0);
 
 
-		LX_GEO_FACTORY_SHARED_API bg::strategy::transform::inverse_transformer<double, 2, 2> geotransform_to_inv_matrix_transformer(double geotransform[6]);
+		LX_GEO_FACTORY_SHARED_API bg::strategy::transform::inverse_transformer<double, 2, 2> geotransform_to_inv_matrix_transformer(const double geotransform[6]);
 
 	}
 }
