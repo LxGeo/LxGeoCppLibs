@@ -46,5 +46,13 @@ namespace LxGeo
 			return values;
 		}
 
+        template <std::ranges::input_range Range>
+        double norm(const Range& in_container) {
+            double squared_sum = 0;
+            for (const auto& c_val : in_container)
+                squared_sum += c_val * c_val;
+            return std::sqrt(squared_sum);
+        }
+
 	}
 }
