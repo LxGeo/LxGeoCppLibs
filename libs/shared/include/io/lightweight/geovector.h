@@ -50,6 +50,17 @@ namespace LxGeo
 				init_rtree();
 			}
 
+			GeoVector(GeoVector&& other) noexcept : SpatialIndexedGeometryContainer<geom_type>(std::move(other))  {
+				geometries_container = std::move(other.geometries_container);				
+			}
+
+			GeoVector& operator=(GeoVector&& other) noexcept {
+				if (this != &other) {
+					geometries_container = std::move(other.geometries_container);
+				}
+				return *this;
+			}
+
 			size_t length() const override {
 				return geometries_container.size();
 			}
@@ -109,7 +120,7 @@ namespace LxGeo
 				}
 				out_geovector.init_rtree();
 
-				return out_geovector;
+				return std::move(out_geovector);
 			}
 
 			GeoVector get_view_spatial(const double& xmin, const double& ymin, const double& xmax, const double& ymax) const {
@@ -183,6 +194,8 @@ namespace LxGeo
 					OGRGeometry* geom = c_feature->GetGeometryRef();
 					if (ogr_geom_type* ogr_in_geometry = dynamic_cast<ogr_geom_type*>(geom))
 					{
+						if (!ogr_in_geometry->IsValid())
+							continue;
 						geom_type c_geometry = transform_OGR2B_geometry<ogr_geom_type,geom_type>(ogr_in_geometry);
 						if (!spatial_filter.outer().empty() & !bg::intersects(c_geometry, spatial_filter))
 							continue;

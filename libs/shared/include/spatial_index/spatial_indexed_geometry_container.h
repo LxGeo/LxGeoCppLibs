@@ -21,6 +21,17 @@ namespace LxGeo
 			SpatialIndexedGeometryContainer(Boost_RTree& ref_rtree) :rtree(ref_rtree) {};
 			~SpatialIndexedGeometryContainer() {};
 
+			SpatialIndexedGeometryContainer(SpatialIndexedGeometryContainer&& other) noexcept {
+				rtree = std::move(other.rtree);				
+			}
+			
+			SpatialIndexedGeometryContainer& operator=(SpatialIndexedGeometryContainer&& other) noexcept {
+				if (this != &other) {
+					rtree = std::move(other.rtree);
+				}
+				return *this;
+			}
+
 			virtual size_t length() const = 0;
 			virtual geom_type& operator[](int offset) = 0;
 			virtual const geom_type& operator[](int offset) const = 0;

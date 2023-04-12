@@ -35,6 +35,23 @@ namespace LxGeo
 				crs_wkt = ref_gimg.crs_wkt;
 			};
 
+			GeoImage(GeoImage&& other) noexcept {				
+				image = std::move(other.image);
+				no_data = std::move(other.no_data);
+				crs_wkt = std::move(other.crs_wkt);
+				set_geotransform(other.geotransform);
+			}
+
+			GeoImage& operator=(GeoImage&& other) noexcept {
+				if (this != &other) {
+					image = std::move(other.image);
+					no_data = std::move(other.no_data);
+					crs_wkt = std::move(other.crs_wkt);
+					set_geotransform(other.geotransform);
+				}
+				return *this;
+			}
+
 			void set_geotransform(const double _geotransform[6]) {
 				memcpy(geotransform, _geotransform, sizeof(double) * 6);
 			}
