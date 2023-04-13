@@ -98,7 +98,7 @@ namespace LxGeo
 			}
 
 			template <typename cv_mat_type>
-			GeoImage<cv_mat_type> get_view_pixel(const int& xStart, const int& yStart, const int& xSize, const int& ySize) {
+			GeoImage<cv_mat_type> get_view_pixel(const int& xStart, const int& yStart, const int& xSize, const int& ySize) const {
 				int left_pad = -std::min<int>(xStart, 0);
 				int right_pad = std::max<int>(xStart + xSize, image.cols) - image.cols;
 				int top_pad = -std::min<int>(yStart, 0);
@@ -132,7 +132,7 @@ namespace LxGeo
 			};
 
 			template <typename envelope_type>
-			GeoImage<cv_mat_type> get_view_spatial(const envelope_type& spatial_envelope) {
+			GeoImage<cv_mat_type> get_view_spatial(const envelope_type& spatial_envelope) const {
 				double MinX, MinY, MaxX, MaxY;
 				if constexpr (std::is_same_v<envelope_type, OGREnvelope>) {
 					MinX = spatial_envelope.MinX; MinY = spatial_envelope.MinY; MaxX = spatial_envelope.MaxX; MaxY = spatial_envelope.MaxY;
@@ -147,7 +147,7 @@ namespace LxGeo
 			}
 
 			template <typename cv_mat_type>
-			GeoImage<cv_mat_type> get_view_spatial(const double& xmin, const double& ymin, const double& xmax, const double& ymax) {
+			GeoImage<cv_mat_type> get_view_spatial(const double& xmin, const double& ymin, const double& xmax, const double& ymax) const{
 				double col_start_subpixel, col_end_subpixel, row_start_subpixel, row_end_subpixel;
 				_calc_pixel_coords(
 					(sign(geotransform[1]) == 1) ? xmin : xmax,
