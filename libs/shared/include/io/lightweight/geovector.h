@@ -42,6 +42,11 @@ namespace LxGeo
 				init_rtree();
 			}
 
+			GeoVector(std::vector<Geometries_with_attributes<geom_type>>&& _geometries_container) :SpatialIndexedGeometryContainer<geom_type>() {
+				geometries_container = std::move(_geometries_container);
+				init_rtree();
+			}
+
 			GeoVector(const std::vector<geom_type>& _geometries_container) :SpatialIndexedGeometryContainer<geom_type>() {
 				geometries_container.reserve(_geometries_container.size());
 				for (const auto& c_geom : _geometries_container) {
@@ -308,7 +313,7 @@ namespace LxGeo
 
 			}
 
-			void to_file(const std::string& out_file, OGRSpatialReference* spatial_refrence = nullptr) {
+			void to_file(const std::string& out_file, const OGRSpatialReference* spatial_refrence = nullptr) {
 				assert(geometries_container.size() > 0 && "Empty Geovector! No file saved!");
 				std::string s_crs_wkt = "";
 				if (spatial_refrence) {
