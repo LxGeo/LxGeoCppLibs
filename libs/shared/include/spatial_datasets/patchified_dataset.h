@@ -1,6 +1,7 @@
 #pragma once
 #include "defs.h"
 #include "geometry_constructor/grid.h"
+#include "lightweight/geovector.h"
 
 
 namespace LxGeo
@@ -50,6 +51,11 @@ namespace LxGeo
 					[&_boundary_geometry](const Boost_Box_2& a)->bool {return bg::intersects(_boundary_geometry, a); });
 			};
 
+			void transform_inplace(const std::function<void(Boost_Box_2&)>& transformer_fn) {
+				for (auto& el : grid_boxes)
+					transformer_fn(el);
+			}
+
 			size_t length() {
 				return grid_boxes.size();
 			}
@@ -58,6 +64,14 @@ namespace LxGeo
 				assert(abs(offset) < length() && "Dataset offset out of bounds!");
 				offset = (offset + length()) % length();
 				return grid_boxes[offset];
+			}
+
+			void to_file(std::string out_path, const OGRSpatialReference& srs) {
+				std::vector<Boost_Polygon_2> temp_polygon_contatiner(grid_boxes.size());
+				for (size_t idx = 0; idx < grid_boxes.size(); idx++)
+					bg::assign(temp_polygon_contatiner[idx], grid_boxes[idx]);
+				IO_DATA::GeoVector<Boost_Polygon_2> grid_gvector = IO_DATA::GeoVector<Boost_Polygon_2>(std::move(temp_polygon_contatiner));
+				grid_gvector.to_file(out_path, &srs);
 			}
 
 		public:

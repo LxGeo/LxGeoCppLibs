@@ -1,6 +1,6 @@
 #pragma once
 
-#if true
+#if false
 #include <execution>
 #define SEQ std::execution::seq,
 #define PAR std::execution::par,
