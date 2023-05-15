@@ -1,5 +1,4 @@
-#ifndef TQDM_H
-#define TQDM_H
+#pragma once
 #include <io.h>
 #define isatty _isatty
 //#include <unistd.h>
@@ -185,4 +184,4 @@ class tqdm {
             }
         }
 };
-#endif
+

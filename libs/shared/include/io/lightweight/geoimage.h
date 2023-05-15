@@ -1,5 +1,6 @@
 #pragma once
-#include "defs.h"
+#include "defs_ogr.h"
+#include "defs_opencv.h"
 #include "lightweight/raster_profile.h"
 #include "export_io_data.h"
 #include "GDAL_OPENCV_IO.h"

@@ -1,6 +1,6 @@
 #include "defs.h"
 #include "geometry_lab.h"
-
+#include "design_pattern/extended_iterators.h"
 
 namespace LxGeo
 {

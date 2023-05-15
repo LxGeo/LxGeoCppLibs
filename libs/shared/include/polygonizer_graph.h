@@ -1,6 +1,7 @@
 #pragma once
 
 #include "defs.h"
+#include "defs_boost.h"
 #include "export_shared.h"
 #include "polygonizer_graph_wrapper.h"
 

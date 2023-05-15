@@ -1,5 +1,7 @@
 #pragma once
 #include "defs.h"
+#include "defs_boost.h"
+#include "defs_opencv.h"
 #include "export_io_data.h"
 #include "GDAL_OPENCV_IO.h"
 #include "coords.h"

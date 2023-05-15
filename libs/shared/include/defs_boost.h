@@ -6,6 +6,8 @@
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/index/rtree.hpp>
 #include "export_shared.h"
+#include <boost/polygon/polygon.hpp>
+#include "defs_ogr.h"
 
 namespace LxGeo
 {

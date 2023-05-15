@@ -1,6 +1,9 @@
 #pragma once
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include "defs_boost.h"
+
+using namespace LxGeo::GeometryFactoryShared;
 
 struct VertexData
 {

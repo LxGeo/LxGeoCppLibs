@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include "defs.h"
 
 namespace LxGeo

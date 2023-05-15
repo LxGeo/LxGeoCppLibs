@@ -1,5 +1,6 @@
 #pragma once
 #include "defs.h"
+#include "defs_common.h"
 
 
 
@@ -8,6 +9,7 @@ namespace LxGeo
 
 	namespace IO_DATA
 	{
+		using namespace LxGeo::GeometryFactoryShared;
 
 		struct LayerDef {
 			std::list<std::string> int_attributes_names;

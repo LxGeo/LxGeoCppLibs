@@ -1,5 +1,6 @@
 #pragma once
-#include "defs.h"
+#include "defs_ogr.h"
+#include "defs_boost.h"
 #include "export_io_data.h"
 #include "GDAL_OPENCV_IO.h"
 
@@ -9,6 +10,8 @@ namespace LxGeo
 
 	namespace IO_DATA
 	{
+
+		using namespace LxGeo::GeometryFactoryShared;
 
 		template <typename cv_mat_type>
 		struct GeoImage;
