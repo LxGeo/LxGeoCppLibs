@@ -29,8 +29,28 @@
 #include <ranges>
 #include <Filter.h>
 
-//using namespace LxGeo::LxGeoCommon;
-using namespace LxGeo::GeometryFactoryShared;
+namespace Constants
+{
+	const double PI = 3.1415926535897832384626;
+	const double SQRT_2 = 1.414213562373095;
+	const double PREC = 1.0 / (1 << 30) / (1 << 10);
+	const size_t MEAN_PTS_PER_POLYGON = 7;
+}
+
+namespace gdalConstants {
+	const std::set<std::string> gdal_types_set = {
+		"Byte", "Int8", "UInt16", "Int16", "UInt32", "Int32", "UInt64", "Int64", "Float32", "Float64", "CInt16", "CInt32", "CFloat32" , "CFloat64"
+	};
+}
+
+# define M_PI 3.14159265358979323846
+
+#define	S_NO_ERROR 0
+#define	S_SPATIAL_REF_CONFLICT 1
+#define	S_WRONG_SHAPEFILE_PATH 2
+#define S_DIRECTORY_CREATION_ERROR 3
+#define	S_UNKNOWN_ERROR 4
+
 
 template<typename T, typename T2>
 T get_vector_by_indices(T& input_vector, T2& indices_vector) {
@@ -189,24 +209,3 @@ namespace LxGeo
 }
 
 
-namespace Constants
-{
-	const double PI = 3.1415926535897832384626;
-	const double SQRT_2 = 1.414213562373095;
-	const double PREC = 1.0 / (1 << 30) / (1 << 10);
-	const size_t MEAN_PTS_PER_POLYGON = 7;
-}
-
-namespace gdalConstants {
-	const std::set<std::string> gdal_types_set = {
-		"Byte", "Int8", "UInt16", "Int16", "UInt32", "Int32", "UInt64", "Int64", "Float32", "Float64", "CInt16", "CInt32", "CFloat32" , "CFloat64"
-	};
-}
-
-# define M_PI 3.14159265358979323846
-
-#define	S_NO_ERROR 0
-#define	S_SPATIAL_REF_CONFLICT 1
-#define	S_WRONG_SHAPEFILE_PATH 2
-#define S_DIRECTORY_CREATION_ERROR 3
-#define	S_UNKNOWN_ERROR 4
