@@ -27,6 +27,7 @@ namespace LxGeo
 		typedef EK::Direction_2 Direction_2;
 		typedef EK::Triangle_2 Triangle_2;
 		typedef CGAL::Polygon_2<EK> Polygon_2;
+		typedef CGAL::Polygon_with_holes_2<EK> Polygon_with_holes_2;
 
 		typedef CGAL::Exact_predicates_inexact_constructions_kernel IK;
 		typedef IK::Point_2 Inexact_Point_2;
@@ -37,6 +38,7 @@ namespace LxGeo
 		typedef IK::Triangle_2 Inexact_Triangle_2;
 		typedef IK::Iso_rectangle_2 Inexact_Iso_rectangle_2;
 		typedef CGAL::Polygon_2<IK> Inexact_Polygon_2;
+		typedef CGAL::Polygon_with_holes_2<IK> Inexact_Polygon_with_holes_2;
 		typedef CGAL::Straight_skeleton_2<IK>  Inexact_Straight_Skeleton_2;
 
 
