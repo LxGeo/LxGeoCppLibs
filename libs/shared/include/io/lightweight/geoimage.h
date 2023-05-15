@@ -105,7 +105,7 @@ namespace LxGeo
 				int down_pad = std::max<int>(yStart + ySize, image.rows) - image.rows;
 
 
-				cv::Rect view_rect(xStart + left_pad, yStart + top_pad, xSize - right_pad, ySize - down_pad);
+				cv::Rect view_rect(xStart + left_pad, yStart + top_pad, xSize - left_pad - right_pad, ySize - top_pad - down_pad);
 				cv_mat_type non_padded_data(image, view_rect);
 
 				cv_mat_type padded_data;

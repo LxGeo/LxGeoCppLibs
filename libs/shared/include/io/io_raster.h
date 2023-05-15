@@ -267,6 +267,7 @@ namespace LxGeo
 					non_padded_data = raster_data(cv::Rect(xStart + left_pad, yStart + top_pad, xSize - right_pad, ySize - down_pad));
 				}
 				else {
+					// May be corrected due wrong values defintion below (check geoimage read padded)
 					non_padded_data = kgdal2cv.ImgReadByGDAL(raster_path, xStart + left_pad, yStart + top_pad, xSize - right_pad, ySize - down_pad);
 				}
 				matrix padded_data;
