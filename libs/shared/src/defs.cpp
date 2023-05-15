@@ -135,6 +135,15 @@ namespace LxGeo
 			return out_box;
 		}
 
+		OGREnvelope box_buffer(OGREnvelope& in_box, double buff) {
+			OGREnvelope out_box(in_box);
+			out_box.MinX -= buff;
+			out_box.MinY -= buff;
+			out_box.MaxX += buff;
+			out_box.MaxY += buff;
+			return out_box;
+		}
+
 		OGRPoint transform_B2OGR_Point(const Boost_Point_2& in_point) {
 			return OGRPoint(in_point.get<0>(), in_point.get<1>());
 		}
