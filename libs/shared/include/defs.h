@@ -4,6 +4,7 @@
 #include <iostream>
 #include <utility>
 #include <set>
+#include <unordered_set>
 #include <map>
 #include <list>
 #include <deque>
@@ -15,15 +16,10 @@
 #include <random>
 #include <boost/log/trivial.hpp>
 
-#include "defs_common.h"
-#include "defs_boost.h"
-#include "defs_opencv.h"
-#include "defs_cgal.h"
-#include "defs_ogr.h"
-#include "geometry_lab.h"
+#include <ogrsf_frmts.h>
 #include <fmt/core.h>
 #include "tqdm/tqdm.h"
-#include "coords.h"
+#include "export_shared.h"
 
 #include <concepts>
 #include <ranges>
