@@ -89,6 +89,23 @@ namespace LxGeo
 			}
 		}
 
+		template <typename point_type>
+		std::vector<std::vector<cv::Point>> transform_B2CV_Polygon(const bg::model::polygon<point_type>& in_poly) {
+			std::vector<std::vector<cv::Point>> contours;
+			for (auto it = bg::interior_rings(in_poly).begin(); it != bg::interior_rings(in_poly).end(); ++it) {
+				std::vector<cv::Point> contour;
+				for (auto pt_it = it->begin(); pt_it != it->end(); ++pt_it) {
+					contour.push_back(cv::Point((*pt_it).get<0>(), (*pt_it).get<1>()));
+				}
+				contours.push_back(contour);
+			}
+			std::vector<cv::Point> exterior_contour;
+			for (auto pt_it = bg::exterior_ring(in_poly).begin(); pt_it != bg::exterior_ring(in_poly).end(); ++pt_it) {
+				exterior_contour.push_back(cv::Point((*pt_it).get<0>(), (*pt_it).get<1>()));
+			}
+			contours.insert(contours.begin(), exterior_contour);
+			return contours;
+		}
 
 		template <typename env_type>
 		struct envelopeGet {
