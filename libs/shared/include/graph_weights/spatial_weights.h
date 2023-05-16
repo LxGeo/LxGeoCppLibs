@@ -71,10 +71,20 @@ namespace LxGeo
 				init_rtree();
 			};
 
-			SpatialWeights(std::vector<Geometries_with_attributes<geom_type>>& input_geometries, Boost_RTree& ref_rtree) :
+			SpatialWeights(const std::vector<Geometries_with_attributes<geom_type>>& input_geometries, const Boost_RTree& ref_rtree) :
 				SpatialIndexedGeometryContainer<geom_type>(ref_rtree), geometries_container(input_geometries) {
 				_reset();
 			};
+
+			SpatialWeights& operator=(SpatialWeights&& other) noexcept {
+				if (this != &other) {
+					rtree = std::move(other.rtree);
+					geometries_container = std::move(other.geometries_container);
+				}
+				return *this;
+			}
+
+			SpatialWeights(SpatialWeights& other) : SpatialIndexedGeometryContainer<geom_type>(other.rtree), geometries_container(other.geometries_container) {};
 
 			~SpatialWeights() {};
 
@@ -175,8 +185,8 @@ namespace LxGeo
 				return edges_linestrings;
 			}
 
-			static SpatialWeights from_geovector(IO_DATA::GeoVector<geom_type>& in_gvec) {
-				auto spw= SpatialWeights<geom_type>(in_gvec.geometries_container, in_gvec.rtree);
+			static SpatialWeights from_geovector(const IO_DATA::GeoVector<geom_type>& in_gvec) {
+				SpatialWeights<geom_type> spw = SpatialWeights<geom_type>(in_gvec.geometries_container, in_gvec.rtree);
 				return spw;
 			}
 
