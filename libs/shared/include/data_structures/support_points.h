@@ -1,5 +1,5 @@
 #pragma once
-#include "defs.h"
+#include "defs_boost.h"
 #include "relationships/composition_struct.h"
 
 namespace LxGeo

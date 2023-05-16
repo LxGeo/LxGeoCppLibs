@@ -1,5 +1,6 @@
 #pragma once
 #include "defs.h"
+#include "defs_boost.h"
 
 namespace LxGeo
 {
