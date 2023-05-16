@@ -59,6 +59,10 @@ namespace LxGeo
 				geometries_container = std::move(other.geometries_container);				
 			}
 
+			GeoVector(const GeoVector& other) : SpatialIndexedGeometryContainer<geom_type>(other) {
+				geometries_container = other.geometries_container;
+			}
+
 			GeoVector& operator=(GeoVector&& other) noexcept {
 				if (this != &other) {
 					geometries_container = std::move(other.geometries_container);

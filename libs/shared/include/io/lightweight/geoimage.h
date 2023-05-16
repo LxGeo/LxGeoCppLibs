@@ -76,6 +76,14 @@ namespace LxGeo
 				}
 			}
 
+			void set_nodata(double nodata_value) {
+				no_data = nodata_value;
+			}
+
+			void set_nodata(std::optional<double> nodata_optional) {
+				no_data = nodata_optional;
+			}
+
 			cv::Mat get_image() const {
 				if constexpr (std::is_same_v < cv_mat_type, cv::Mat>)
 					return image;
