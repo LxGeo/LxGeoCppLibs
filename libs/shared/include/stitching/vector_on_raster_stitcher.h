@@ -31,11 +31,11 @@ namespace LxGeo
 
 				std::list<cv_pixel_type> out_pixels_list;
 
-				if (strategy == RasterPixelsStitcherStartegy::contours) {
+				Boost_Discrete_Polygon_2 resp_polygon_pixel_coords = affine_transform_geometry<Boost_Polygon_2, Boost_Discrete_Polygon_2>(
+					resp_polygon, inv_transformer_matrix
+					);
 
-					Boost_Discrete_Polygon_2 resp_polygon_pixel_coords = affine_transform_geometry<Boost_Polygon_2, Boost_Discrete_Polygon_2>(
-						resp_polygon, inv_transformer_matrix
-						);
+				if (strategy == RasterPixelsStitcherStartegy::contours) {
 
 					// creating a list of all rings (outer and inners)
 					std::list<Boost_Discrete_Ring_2*> polygons_rings_pixels_coords;
@@ -77,10 +77,6 @@ namespace LxGeo
 						}
 						return sum + max_val * null_count;
 					};
-
-					Boost_Discrete_Polygon_2 resp_polygon_pixel_coords = affine_transform_geometry<Boost_Polygon_2, Boost_Discrete_Polygon_2>(
-						resp_polygon, inv_transformer_matrix
-						);
 
 					Boost_Discrete_Box_2 envelop;
 					boost::geometry::envelope(resp_polygon_pixel_coords, envelop);
