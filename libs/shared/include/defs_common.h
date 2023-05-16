@@ -138,6 +138,198 @@ namespace LxGeo
 				return boost::geometry::get<1>(point);
 			}
 		};
+
+		template <typename PolygonTypeT>
+		struct PolygonTrait {
+			using PolygonType = PolygonTypeT;
+			using PointType = typename PolygonType::PointType;
+
+			static std::vector<PointType> getOuterRing(const PolygonType& polygon) {};
+
+
+			static std::vector<PointType> getInnerRing(const PolygonType& polygon, size_t idx) {};
+			
+
+			PolygonType create(const std::vector<PointType>& exterior_ring, const std::vector<std::vector<PointType>>& interior_rings = {}) {};
+			static size_t interiorCount(const PolygonType& polygon) {};
+
+		};
+
+		template<typename K>
+		struct PolygonTrait<CGAL::Polygon_2<K>> {
+			using PolygonType = CGAL::Polygon_2<K>;
+			using PointType = typename K::Point_2;
+
+			template <template <typename...> class Container>
+			static Container<PointType> getOuterRing(const PolygonType& polygon) {
+				Container<PointType> points;
+				for (const PointType& c_point : polygon) {
+					points.push_back(c_point);
+				}
+				return points;
+			}
+
+			template <template <typename...> class Container, template <typename...> class OuterContainer = std::list>
+			static PolygonType create(const Container<PointType>& exterior_ring, const OuterContainer<Container<PointType>>& interior_rings = {}) {
+				if (interior_rings.size() > 0)
+					throw std::runtime_error("Cannot use CGAL::Polygon_2 for polygons with holes!");
+				return PolygonType(exterior_ring.begin(), exterior_ring.end());
+			}
+
+			static size_t interiorCount(const PolygonType& polygon) { return 0; };
+
+		};
+
+		template<typename K>
+		struct PolygonTrait<CGAL::Polygon_with_holes_2<K>> {
+			using PointType = typename K::Point_2;
+			using PolygonType = CGAL::Polygon_with_holes_2<K>;
+			using ExteriorPolygonType = CGAL::Polygon_2<K>;
+
+			template <template <typename...> class Container>
+			static Container<PointType> getOuterRing(const PolygonType& polygon) {
+				return PolygonTrait<ExteriorPolygonType>::getOuterRing(polygon.outer_boundary());
+			}
+
+			template <template <typename...> class Container>
+			static Container<PointType> getInnerRing(const PolygonType& polygon, size_t idx) {
+
+				if (idx<0 || idx>polygon.holes().size())
+					throw std::runtime_error("Interior ring index out of bounds!");
+
+				Container<PointType> points;
+
+				auto respective_ring = polygon.holes().begin();
+				for (size_t c_idx = 0; c_idx < idx; c_idx++)
+					respective_ring++;
+
+				for (const auto& c_pt : respective_ring) {
+					points.push_back(c_pt);
+				}
+				return points;
+
+			}
+
+			template <template <typename...> class Container, template <typename...> class OuterContainer = std::list>
+			static PolygonType create(const Container<PointType>& exterior_ring, const OuterContainer<Container<PointType>>& interior_rings = {}) {
+				return PolygonType(exterior_ring, interior_rings.begin(), interior_rings.end());
+			}
+
+			static size_t interiorCount(const PolygonType& polygon) { return polygon.holes().size(); };
+
+		};
+
+
+		template<typename PointTypeT>
+		struct PolygonTrait< bg::model::polygon<PointTypeT> > {
+
+			using PointType = typename PointTypeT;
+			using PolygonType = bg::model::polygon<PointType>;
+
+			static std::vector<PointType> getOuterRing(const PolygonType& polygon) {
+				std::vector<PointType> points; points.reserve(polygon.outer().size());
+				for (const auto& c_pt : polygon.outer()) {
+					points.push_back(c_pt);
+				}
+				return points;
+			}
+
+			static std::vector<PointType> getInnerRing(const PolygonType& polygon, size_t idx) {
+				if (idx<0 || idx>polygon.inners().size())
+					throw std::runtime_error("Interior ring index out of bounds!");
+
+				std::vector<PointType> points;
+
+				auto respective_ring = polygon.inners().begin();
+				for (size_t c_idx = 0; c_idx < idx; c_idx++)
+					respective_ring++;
+
+				points.reserve(respective_ring->size());
+				for (const auto& c_pt : *respective_ring) {
+					points.push_back(c_pt);
+				}
+				return points;
+			}
+
+			
+			static PolygonType create(const std::vector<PointType>& exterior_ring, const std::vector<std::vector<PointType>>& interior_rings = {}) {
+				bg::model::polygon<PointType> p;
+				for (const auto& c_exterior_point : exterior_ring)
+					bg::append(p.outer(), c_exterior_point);
+
+				size_t num_interors = interior_rings.size();
+				p.inners().resize(num_interors);
+
+				size_t c_ring_idx = 0;
+				for (auto c_ring_it = interior_rings.begin(); c_ring_it != interior_rings.end(); c_ring_it++, c_ring_idx++) {
+					for (const auto& c_interior_point : *c_ring_it)
+						bg::append(p.inners()[c_ring_idx], c_interior_point);
+				}
+
+				return p;
+			}
+
+			static size_t interiorCount(const PolygonType& polygon) { return polygon.inners().size(); };
+
+		};
+		
+		template<>
+		struct PolygonTrait<OGRPolygon> {
+
+			using PointType = typename OGRPoint;
+			using PolygonType = typename OGRPolygon;
+
+			template <template <typename...> class Container>
+			static Container<PointType> getOuterRing(const PolygonType& polygon) {
+				Container<OGRPoint> points;
+				const OGRLinearRing* outerRing = polygon.getExteriorRing();
+				for (int i = 0; i < outerRing->getNumPoints(); ++i) {
+					OGRPoint c_point;
+					outerRing->getPoint(i, &c_point);
+					points.push_back(c_point);
+				}
+				return points;
+			}
+
+			template <template <typename...> class Container>
+			static Container<PointType> getInnerRing(const PolygonType& polygon, size_t idx) {
+				Container<OGRPoint> points;
+				const OGRLinearRing* inner_ring = polygon.getInteriorRing(idx);
+				for (int i = 0; i < inner_ring->getNumPoints(); ++i) {
+					OGRPoint c_point;
+					inner_ring->getPoint(i, &c_point);
+					points.push_back(c_point);
+				}
+				return points;
+			}
+
+			template <template <typename...> class Container, template <typename...> class OuterContainer = std::list>
+			static PolygonType create(const Container<PointType>& exterior_ring, const OuterContainer<Container<PointType>>& interior_rings = {}) {
+
+				OGRPolygon polygon;
+				OGRLinearRing exteriorRing;
+
+				for (const auto& point : exterior_ring) {
+					exteriorRing.addPoint(&point);
+				}
+
+				polygon.addRing(&exteriorRing);
+
+				for (auto ring = interior_rings.begin(); ring != interior_rings.end(); ring++) {
+					OGRLinearRing interiorRing;
+					for (const auto& point : *ring) {
+						interiorRing.addPoint(&point);
+					}
+					polygon.addRing(&interiorRing);
+				}
+				return polygon;
+
+			}
+
+			static size_t interiorCount(const PolygonType& polygon) { return polygon.getNumInteriorRings(); };
+
+		};
+
 		template <typename env_type>
 		struct envelopeGet {
 			const env_type* env;
