@@ -25,6 +25,35 @@ namespace LxGeo
 			//RasterPixelsStitcher() {};
 			RasterPixelsStitcher(const GeoImage<cv::Mat>& _ref_gimg): ref_gimg(_ref_gimg), inv_transformer_matrix(geotransform_to_inv_matrix_transformer(ref_gimg.geotransform))
 			{};
+			template <typename cv_pixel_type>
+			std::list<cv_pixel_type> readLineStringPixels(const Boost_LineString_2& resp_linestring, RasterPixelsStitcherStartegy strategy) {
+				std::list<cv_pixel_type> out_pixels_list;
+
+				Boost_Discrete_LineString_2 resp_linestring_pixel_coords = affine_transform_geometry<Boost_LineString_2, Boost_Discrete_LineString_2>(
+					resp_linestring, inv_transformer_matrix
+					);
+
+				if (strategy == RasterPixelsStitcherStartegy::contours) {
+
+					auto pts_iter = resp_linestring_pixel_coords.begin();
+					for (size_t iter_count = 0; iter_count < resp_linestring_pixel_coords.size() - 1; ++iter_count) {
+						cv::Point st_pt(pts_iter->get<0>(), pts_iter->get<1>()), end_pt(next(pts_iter)->get<0>(), next(pts_iter)->get<1>());
+						cv::LineIterator it(ref_gimg.image, st_pt, end_pt, 8);
+						if (*it != nullptr) {
+							for (int i = 0; i < it.count; i++, ++it) {
+								out_pixels_list.push_back(ref_gimg.image.at<cv_pixel_type>(it.pos()));
+							}
+						}
+						pts_iter++;
+					}
+
+				}
+				else
+					throw std::exception("Only contours strategy is implemented for linestring!");
+
+				return out_pixels_list;
+
+			}
 			
 			template <typename cv_pixel_type>
 			std::list<cv_pixel_type> readPolygonPixels(const Boost_Polygon_2& resp_polygon, RasterPixelsStitcherStartegy strategy) {
