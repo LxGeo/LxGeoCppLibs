@@ -119,23 +119,6 @@ namespace LxGeo
 			return std::max<double>(p3_dist, p4_dist);
 		}
 
-		bool pts_collinear_2(Inexact_Point_2 p1, Inexact_Point_2 p2, Inexact_Point_2 p3) {
-			Inexact_Vector_2 s_vector_1(p2, p1);
-			Inexact_Vector_2 s_vector_2(p2, p3);
-			if (s_vector_1.squared_length() < 1e-5 || s_vector_2.squared_length() < 1e-5) return true;
-
-			s_vector_1 = s_vector_1 / CGAL::sqrt(s_vector_1.squared_length());
-			s_vector_2 = s_vector_2 / CGAL::sqrt(s_vector_2.squared_length());
-
-			double cross_product = s_vector_1 * s_vector_2;
-			cross_product = std::max(cross_product, double(-1));
-			cross_product = std::min(cross_product, double(1));
-			double diff_angle = acos(cross_product);
-			double angle_mod = asin(sqrt(sin(diff_angle) * sin(diff_angle)));
-			bool pts_collinear = (angle_mod < (M_PI / 180));
-			return pts_collinear;
-		}
-
 		OGRGeometry* BuildMultiLine(OGRGeometry* geometry)
 		{
 			OGRPolygon* poly = dynamic_cast<OGRPolygon*>(geometry);
