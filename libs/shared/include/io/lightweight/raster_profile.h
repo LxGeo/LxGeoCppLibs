@@ -97,12 +97,11 @@ namespace LxGeo
 				int width = gdal_dataset->GetRasterXSize();
 				int height = gdal_dataset->GetRasterYSize();
 				int band_count = gdal_dataset->GetRasterCount();
-				char* crs_wkt=NULL;
-				if (gdal_dataset->GetSpatialRef()) {					
-					gdal_dataset->GetSpatialRef()->exportToWkt(&crs_wkt);
-				}
-				else {
-					crs_wkt = nullptr;
+				std::string crs_wkt="";
+				if (gdal_dataset->GetSpatialRef()) {
+					char* temp_char;
+					gdal_dataset->GetSpatialRef()->exportToWkt(&temp_char);
+					crs_wkt = std::string(temp_char);
 				}
 				double geotransform[6];
 				if (gdal_dataset->GetGeoTransform(geotransform) != CE_None){
