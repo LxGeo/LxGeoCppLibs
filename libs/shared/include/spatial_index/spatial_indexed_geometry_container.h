@@ -17,8 +17,9 @@ namespace LxGeo
 		public:
 			Boost_RTree rtree;
 
-			SpatialIndexedGeometryContainer(){}
-			SpatialIndexedGeometryContainer(Boost_RTree& ref_rtree) :rtree(ref_rtree) {};
+			SpatialIndexedGeometryContainer() {}
+			SpatialIndexedGeometryContainer(const SpatialIndexedGeometryContainer& other): rtree(other.rtree) {};
+			SpatialIndexedGeometryContainer(const Boost_RTree& ref_rtree) :rtree(ref_rtree) {};
 			~SpatialIndexedGeometryContainer() {};
 
 			SpatialIndexedGeometryContainer(SpatialIndexedGeometryContainer&& other) noexcept {
@@ -31,6 +32,8 @@ namespace LxGeo
 				}
 				return *this;
 			}
+
+			SpatialIndexedGeometryContainer& operator=(SpatialIndexedGeometryContainer const&) = default;
 
 			virtual size_t length() const = 0;
 			virtual geom_type& operator[](int offset) = 0;
