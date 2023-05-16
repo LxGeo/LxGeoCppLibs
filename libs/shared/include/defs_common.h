@@ -107,6 +107,37 @@ namespace LxGeo
 			return contours;
 		}
 
+		// Define a helper struct for coordinate access
+		template <typename PointT>
+		struct PointTraits {
+			static double getX(const PointT& point) { return point.x(); }
+			static double getY(const PointT& point) { return point.y(); }
+		};
+
+		// Specialization for CGAL Point
+		template <>
+		struct PointTraits<Inexact_Point_2> {
+			static double getX(const Inexact_Point_2& point) { return point.x(); }
+			static double getY(const Inexact_Point_2& point) { return point.y(); }
+		};
+
+		// Specialization for OGRPoint
+		template <>
+		struct PointTraits<OGRPoint> {
+			static double getX(const OGRPoint& point) { return point.getX(); }
+			static double getY(const OGRPoint& point) { return point.getY(); }
+		};
+
+		template <>
+		struct PointTraits<Boost_Point_2> {
+			static double getX(const Boost_Point_2& point) {
+				return boost::geometry::get<0>(point);
+			}
+
+			static double getY(const Boost_Point_2& point) {
+				return boost::geometry::get<1>(point);
+			}
+		};
 		template <typename env_type>
 		struct envelopeGet {
 			const env_type* env;
