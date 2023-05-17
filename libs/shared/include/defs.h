@@ -105,6 +105,27 @@ namespace LxGeo
 				return vmax(val1, std::forward<Ts>(vs)...);
 		}
 
+		template <typename Container, typename Predicate>
+		size_t longestSubsequenceLength(const Container& container, Predicate predicate) {
+			static_assert(std::is_invocable_r_v<bool, Predicate, typename Container::value_type>,
+				"Predicate must accept arguments of the same type as the container elements");
+
+			size_t maxLength = 0;
+			size_t currentLength = 0;
+
+			for (const auto& value : container) {
+				if (std::invoke(predicate, value)) {
+					currentLength++;
+					maxLength = std::max(maxLength, currentLength);
+				}
+				else {
+					currentLength = 0;
+				}
+			}
+
+			return maxLength;
+		}
+
 		LX_GEO_FACTORY_SHARED_API std::string random_string(const size_t& length = 10, const std::string& prefix = "", const std::string& suffix = "");
 
 		inline double RADS(const double& in_deg){return in_deg * (M_PI / 180);}
