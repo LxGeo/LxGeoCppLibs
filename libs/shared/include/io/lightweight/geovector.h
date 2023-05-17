@@ -318,7 +318,10 @@ namespace LxGeo
 			}
 
 			void to_file(const std::string& out_file, const OGRSpatialReference* spatial_refrence = nullptr) {
-				assert(geometries_container.size() > 0 && "Empty Geovector! No file saved!");
+				if (geometries_container.empty()) {
+					std::cout << "Empty Geovector! No file saved!" << std::endl;
+					return;
+				}
 				std::string s_crs_wkt = "";
 				if (spatial_refrence) {
 					char* pszWKT = NULL;
