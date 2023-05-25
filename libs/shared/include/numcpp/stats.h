@@ -154,6 +154,22 @@ namespace LxGeo
 				return stdev() / mean();
 			}
 
+			value_type gini_coefficient() {
+				
+				if (!gini_coef.has_value()) {
+
+					double sum_of_absolute_differences = 0;
+					int n = count();
+
+					for (int i = 0; i < n; i++) {
+						sum_of_absolute_differences += (2 * i - n + 1) * non_null_values[i];
+					}
+
+					gini_coef = sum_of_absolute_differences / (n * sum());
+				}
+				return gini_coef.value();
+			}
+
 
 		private:
 			optval_t m_sum;
@@ -161,6 +177,7 @@ namespace LxGeo
 			optval_t m_max;
 			optval_t m_mean;
 			optval_t m_variance;
+			optval_t gini_coef;
 			std::map<double, optval_t> m_percentiles;
 
 
