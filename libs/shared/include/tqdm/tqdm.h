@@ -26,7 +26,7 @@ class tqdm {
         int period = 1;
         unsigned int smoothing = 50;
         bool use_ema = true;
-        float alpha_ema = 0.1;
+        float alpha_ema = 0.1f;
 
         std::vector<const char*> bars = {" ", "|", "|", "|", "|", "|", "|", "|", "|"};
 
@@ -43,10 +43,10 @@ class tqdm {
         void hsv_to_rgb(float h, float s, float v, int& r, int& g, int& b) {
             if (s < 1e-6) {
                 v *= 255.;
-                r = v; g = v; b = v;
+                r = int(v); g = int(v); b = int(v);
             }
             int i = (int)(h*6.0);
-            float f = (h*6.)-i;
+            float f = (h*6.f)-i;
             int p = (int)(255.0*(v*(1.-s)));
             int q = (int)(255.0*(v*(1.-s*f)));
             int t = (int)(255.0*(v*(1.-s*(1.-f))));
@@ -127,7 +127,7 @@ class tqdm {
                     }
                 } else {
                     double dtsum = std::accumulate(deq_t.begin(),deq_t.end(),0.);
-                    int dnsum = std::accumulate(deq_n.begin(),deq_n.end(),0.);
+                    int dnsum = std::accumulate(deq_n.begin(),deq_n.end(),0);
                     avgrate = dnsum/dtsum;
                 }
 
@@ -154,7 +154,7 @@ class tqdm {
                     if (color_transition) {
                         // red (hue=0) to green (hue=1/3)
                         int r = 255, g = 255, b = 255;
-                        hsv_to_rgb(0.0+0.01*pct/3,0.65,1.0, r,g,b);
+                        hsv_to_rgb(0.0f+0.01f*pct/3,0.65,1.0, r,g,b);
                         printf("\033[38;2;%d;%d;%dm ", r, g, b);
                     } else {
                         printf("\033[32m ");
