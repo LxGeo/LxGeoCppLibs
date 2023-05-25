@@ -187,8 +187,11 @@ namespace LxGeo
 				if (!included_fields.empty()) {
 					std::set_intersection(layer_fields_names.begin(), layer_fields_names.end(), included_fields.begin(), included_fields.begin(), std::inserter(to_load_fields, to_load_fields.begin()));
 				}
-				if (!excluded_fields.empty()) {
+				else if (!excluded_fields.empty()) {
 					std::set_difference(layer_fields_names.begin(), layer_fields_names.end(), excluded_fields.begin(), excluded_fields.begin(), std::inserter(to_load_fields, to_load_fields.begin()));
+				}
+				else {
+					to_load_fields = layer_fields_names;
 				}
 				auto field_rename = _field_rename;
 				for (auto& field_name : to_load_fields) {

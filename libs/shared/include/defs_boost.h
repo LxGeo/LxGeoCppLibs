@@ -8,6 +8,7 @@
 #include "export_shared.h"
 #include <boost/polygon/polygon.hpp>
 #include "defs_ogr.h"
+#include <boost/foreach.hpp>
 
 namespace LxGeo
 {
