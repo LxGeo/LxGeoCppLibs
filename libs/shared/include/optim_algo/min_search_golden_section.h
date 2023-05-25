@@ -11,7 +11,7 @@ namespace LxGeo
         constexpr double lambda = 0.5 * (sqrt5 - 1.0);
         constexpr double mu = 0.5 * (3.0 - sqrt5); // = 1 - lambda
 
-        bool stopping_rule(double x0, double x1, double tolerance) {
+        inline bool stopping_rule(double x0, double x1, double tolerance) {
             double xm = 0.5 * std::abs(x1 + x0);
             return (xm <= 1.0) ? (std::abs(x1 - x0) < tolerance) : (std::abs(x1 - x0) < tolerance * xm);
         }
@@ -82,12 +82,11 @@ namespace LxGeo
         double custom_splitting_search(Func f, double left, double right, double tolerance, int max_iter, int nbins=3) {
             
             double bin_size = (right - left) / nbins;
-
             std::list<double> bins_extrema;
             for (int c_bin_idx = 0; c_bin_idx < nbins-1; c_bin_idx++) {
                 double bin_left = left + c_bin_idx * bin_size;
                 double bin_right = left + (c_bin_idx + 1) * bin_size;
-                bins_extrema.push_back(min_binary_search(f, bin_left, bin_right, tolerance, max_iter / nbins));
+                bins_extrema.push_back(powells_method_bounded(f, bin_left, bin_right, tolerance, max_iter / nbins));
             }
             return *std::min_element(bins_extrema.begin(), bins_extrema.end(), [&f](const double& extrema1, const double& extrema2) {return f(extrema1)<f(extrema2); });
         }
