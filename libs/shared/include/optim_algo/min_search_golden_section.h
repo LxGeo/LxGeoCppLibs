@@ -160,5 +160,49 @@ namespace LxGeo
             return xmin;
         }
 
+        namespace ND {
+
+            using PT = std::vector<double>;
+
+            template<typename Func, typename InnerOptimizer>
+            PT custom_splitting_search_nd(Func& f, InnerOptimizer& optimizer, PT left, PT right, double tolerance, int max_iter, int nbins = 3) {
+                int dimensions = left.size();
+                std::vector<double> bin_size(dimensions);
+                for (int i = 0; i < dimensions; i++) {
+                    bin_size[i] = (right[i] - left[i]) / nbins;
+                }
+                std::vector<PT> bins_extrema;
+
+                // Recursive function to split the space
+                std::function<void(PT, PT, int)> split_space;
+
+                split_space = [&](PT bin_left, PT bin_right, int dim) {
+                    if (dim == dimensions) {
+                        bins_extrema.push_back(optimizer(f, bin_left, bin_right, tolerance, max_iter / nbins));
+                    }
+                    else {
+                        for (int c_bin_idx = 0; c_bin_idx < nbins; c_bin_idx++) {
+                            PT new_bin_left = bin_left;
+                            PT new_bin_right = bin_right;
+                            new_bin_left[dim] = bin_left[dim] + c_bin_idx * bin_size[dim];
+                            new_bin_right[dim] = bin_left[dim] + (c_bin_idx + 1) * bin_size[dim];
+                            split_space(new_bin_left, new_bin_right, dim + 1);
+                        }
+                    }
+                };
+
+                PT initial_bin_left = left;
+                PT initial_bin_right = right;
+                split_space(initial_bin_left, initial_bin_right, 0);
+
+                auto min_extrema_it = std::min_element(bins_extrema.begin(), bins_extrema.end(), [&f](PT& extrema1, PT& extrema2) {
+                    return f(extrema1) < f(extrema2);
+                    });
+                return *min_extrema_it;
+            }
+
+
+        }
+
     }
 }
