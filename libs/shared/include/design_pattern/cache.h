@@ -6,12 +6,12 @@ namespace LxGeo
     namespace GeometryFactoryShared
     {
 
-        template<typename Key, typename Result>
+        template<typename Key, typename Result, typename Hash = std::hash<Key>>
         class FunctionCache {
         public:
             using FunctionType = std::function<Result(Key)>;
 
-            FunctionCache(FunctionType func)
+            FunctionCache(FunctionType& func)
                 : function(func) {}
 
             Result operator()(const Key& key) {
@@ -22,8 +22,8 @@ namespace LxGeo
             }
 
         private:
-            std::unordered_map<Key, Result> cache;
-            FunctionType function;
+            std::unordered_map<Key, Result, Hash> cache;
+            FunctionType& function;
         };
 
     }
