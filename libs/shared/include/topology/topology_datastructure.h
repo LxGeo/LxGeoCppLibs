@@ -25,7 +25,8 @@ namespace LxGeo
 				auto& c_polygon = c_gwa->get_definition();
 				auto fixed_polygon = simplify_aberrant_polygon(c_polygon);
 				if (!bg::is_valid(c_polygon))
-					throw std::runtime_error("Unvalid geometry when creating arrangment!");
+					continue;
+					//throw std::runtime_error("Unvalid geometry when creating arrangment!");
 				auto c_polygon_vertex_it = fixed_polygon.outer().begin();
 				auto prev = c_polygon_vertex_it;
 				for (++c_polygon_vertex_it; c_polygon_vertex_it != fixed_polygon.outer().end(); ++c_polygon_vertex_it) {

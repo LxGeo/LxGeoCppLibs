@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <random>
 #include <boost/log/trivial.hpp>
+#include <optional>
 
 #include <ogrsf_frmts.h>
 #include <fmt/core.h>
@@ -24,6 +25,7 @@
 #include <concepts>
 #include <ranges>
 #include <Filter.h>
+#include <future>
 
 namespace Constants
 {
