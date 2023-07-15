@@ -142,6 +142,13 @@ namespace LxGeo
 			overwrite = 1 << 1 // Overwrite dataset (resetting unmodified values)
 		};
 
+		enum SIGN
+		{
+			POSITIVE = 1,
+			NEGATIVE = -1,
+			ZERO = 0
+		};
+
 	}
 }
 
