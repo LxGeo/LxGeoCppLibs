@@ -20,7 +20,7 @@ namespace LxGeo
 			template<typename, typename> class Container = std::list,
 			template<typename> class Allocator = std::allocator>
 		class MeanAggregator : public Aggregator<unit, Container, Allocator> {
-			using Aggregator::Aggregator;
+			using Aggregator<unit, Container, Allocator>::Aggregator;
 			typedef typename Container<unit, Allocator<unit>> container_t;
 
 			cv::Scalar operator()(container_t& container) override {
@@ -47,7 +47,7 @@ namespace LxGeo
 			template<typename, typename> class Container = std::list,
 			template<typename> class Allocator = std::allocator>
 		class MedianAggregator : public Aggregator<unit, Container, Allocator> {
-			using Aggregator::Aggregator;
+			using Aggregator<unit, Container, Allocator>::Aggregator;
 			typedef typename Container<unit, Allocator<unit>> container_t;
 
 		public:

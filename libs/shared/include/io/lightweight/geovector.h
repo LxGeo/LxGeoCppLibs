@@ -146,7 +146,8 @@ namespace LxGeo
 					bg::assign(spatial_envelope, _spatial_envelope);
 				}
 				else if constexpr (std::is_same_v<envelope_type, OGREnvelope>) {
-					spatial_envelope = transform_OGR2B_Polygon(&envelopeToPolygon(_spatial_envelope));
+					auto env_polygon = envelopeToPolygon(_spatial_envelope);
+					spatial_envelope = transform_OGR2B_Polygon(&env_polygon);
 				}
 				return GeoVector::from_file(in_file, layer_name, spatial_envelope, included_fields, excluded_fields, field_rename);
 			}

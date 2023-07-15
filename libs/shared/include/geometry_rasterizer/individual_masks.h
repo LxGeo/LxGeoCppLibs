@@ -16,7 +16,7 @@ namespace LxGeo
 
 		// Returns a pair of geoimage of rasterized geometries and a vector of respective labels
 		template <typename geometry_type, typename cv_mat_type>
-		std::pair<IO_DATA::GeoImage<cv_mat_type>, std::vector<size_t>> rasterize_geometries_masks(GeoVector<geometry_type>& gvector, const IO_DATA::RProfile& reference_raster_profile) {
+		std::pair<IO_DATA::GeoImage<cv_mat_type>, std::vector<size_t>> rasterize_geometries_masks(IO_DATA::GeoVector<geometry_type>& gvector, const IO_DATA::RProfile& reference_raster_profile) {
 
 			std::vector<GeoImage<cv_mat_type>> output_masks; output_masks.reserve(gvector.length());
 
@@ -84,8 +84,8 @@ namespace LxGeo
 				poFeature = OGRFeature::CreateFeature(layer->GetLayerDefn());
 				poFeature->SetField("label", int(geometries_labels_vector[geometry_idx]));
 
-
-				poFeature->SetGeometry(&transform_B2OGR_Polygon(gvector[geometry_idx]));
+				auto ogr_polygon = transform_B2OGR_Polygon(gvector[geometry_idx]);
+				poFeature->SetGeometry(&ogr_polygon);
 
 				if (layer->CreateFeature(poFeature) != OGRERR_NONE)
 				{
@@ -117,7 +117,7 @@ namespace LxGeo
 				extra_options, &no_data_value, output_datatype
 			);
 
-			GeoImage<cv_mat_type> masks_geoimage = GeoImage<cv_mat_type>::from_file(raster_output_path);
+			IO_DATA::GeoImage<cv_mat_type> masks_geoimage = IO_DATA::GeoImage<cv_mat_type>::from_file(raster_output_path);
 			masks_geoimage.set_geotransform(reference_raster_profile.geotransform);
 				/*for (size_t geometry_idx = 0; geometry_idx < gvector.size(); geometry_idx++) {
 					Boost_Box_2 c_geometry_bounds;

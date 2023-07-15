@@ -1,4 +1,5 @@
 #pragma once
+#include "defs.h"
 #include "defs_ogr.h"
 #include "defs_boost.h"
 #include "export_io_data.h"
