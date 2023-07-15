@@ -342,7 +342,7 @@ namespace LxGeo
 
 
 		template <typename cv_mat_type>
-		GeoImage<cv_mat_type> rotate(const GeoImage<cv_mat_type>& gimg, const double& rotation_angle, int warp_mode = cv::INTER_CUBIC) {
+		GeoImage<cv_mat_type> rotate(const GeoImage<cv_mat_type>& gimg, const double& rotation_angle, int warp_mode = cv::INTER_CUBIC, bool keep_geotransform=false) {
 			// get rotation matrix for rotating the image around its center
 			cv::Point2f rotation_center(gimg.image.cols / 2.0, gimg.image.rows / 2.0);
 			cv::Mat rot = cv::getRotationMatrix2D(rotation_center, rotation_angle, 1.0);
@@ -362,11 +362,16 @@ namespace LxGeo
 				cv::cuda::warpAffine(gimg.image, rotated_gimg.image, rot, bbox.size(), warp_mode);
 			}
 
-			// assign updated geotransform
-			cv::Mat rot_inv; cv::invertAffineTransform(rot, rot_inv);
-			cv::Mat input_geotransform_as_matrix; transform_G2CV_affine(gimg.geotransform, input_geotransform_as_matrix);
-			cv::Mat product_mat = multiply_affine_matrices(input_geotransform_as_matrix, rot_inv);
-			transform_CV2G_affine(product_mat, rotated_gimg.geotransform);
+			if (keep_geotransform)
+				rotated_gimg.set_geotransform(gimg.geotransform);
+			else
+			{
+				// assign updated geotransform
+				cv::Mat rot_inv; cv::invertAffineTransform(rot, rot_inv);
+				cv::Mat input_geotransform_as_matrix; transform_G2CV_affine(gimg.geotransform, input_geotransform_as_matrix);
+				cv::Mat product_mat = multiply_affine_matrices(input_geotransform_as_matrix, rot_inv);
+				transform_CV2G_affine(product_mat, rotated_gimg.geotransform);
+			}
 
 			return rotated_gimg;
 		}
