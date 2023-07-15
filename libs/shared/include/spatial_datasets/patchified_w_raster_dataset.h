@@ -25,8 +25,13 @@ namespace LxGeo
 				bool c_error_bool = (md != WriteMode::create || !boost::filesystem::exists(raster_file_path));
 				assert(c_error_bool && error_message.c_str());
 
-				if (md == WriteMode::create | md == WriteMode::overwrite)
+				if (md == WriteMode::create || md == WriteMode::overwrite)
+				{
+					auto out_dirname = boost::filesystem::path(_raster_file_path).parent_path();
+					if (!boost::filesystem::exists(out_dirname))
+						boost::filesystem::create_directories(out_dirname);
 					raster_dataset = raster_profile.to_gdal_dataset(_raster_file_path);
+				}
 				else
 					raster_dataset = std::shared_ptr<GDALDataset>((GDALDataset*)GDALOpen(raster_file_path.c_str(), GA_Update), GDALClose);
 			}
