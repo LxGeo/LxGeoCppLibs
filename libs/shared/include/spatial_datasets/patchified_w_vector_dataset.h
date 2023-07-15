@@ -26,8 +26,12 @@ namespace LxGeo
 				bool c_error_bool = (wm != WriteMode::create || !boost::filesystem::exists(vector_file_path));
 				assert(c_error_bool && error_message.c_str());
 
-				if (wm == WriteMode::create | wm == WriteMode::overwrite)
+				if (wm == WriteMode::create || wm == WriteMode::overwrite) {
+					auto out_dirname = boost::filesystem::path(_vector_file_path).parent_path();
+					if (!boost::filesystem::exists(out_dirname))
+						boost::filesystem::create_directories(out_dirname);
 					vector_dataset = vector_profile.to_gdal_dataset(vector_file_path);
+				}
 				else {
 					vector_dataset = load_gdal_vector_dataset_shared_ptr(vector_file_path, GDAL_OF_UPDATE);
 					vector_profile.update_gdal_dataset(vector_dataset);
