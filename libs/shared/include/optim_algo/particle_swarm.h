@@ -111,7 +111,7 @@ namespace LxGeo
 
                     for (int i = 0; i < numDimensions; ++i) {
                         position[i] = dist(rng) * (maxRange[i] - minRange[i]) + minRange[i];
-                        velocity[i] = dist(rng) * (maxRange[i] - minRange[i]) + minRange[i];
+                        velocity[i] = dist(rng) * (maxRange[i] - minRange[i]);
                         bestPosition[i] = position[i];
                     }
 
@@ -128,10 +128,10 @@ namespace LxGeo
 
                         // Apply bounds
                         if (velocity[i] < minRange[i]) {
-                            velocity[i] = minRange[i];
+                            velocity[i] = abs(r1)*minRange[i];
                         }
                         else if (velocity[i] > maxRange[i]) {
-                            velocity[i] = maxRange[i];
+                            velocity[i] = abs(r2)*maxRange[i];
                         }
                     }
                 }
@@ -142,14 +142,16 @@ namespace LxGeo
 
                         // Apply bounds
                         if (position[i] < minRange[i]) {
-                            position[i] = minRange[i];
+                            position[i] = minRange[i]+(minRange[i]- position[i]);
+                            velocity[i] /= 2;
                         }
                         else if (position[i] > maxRange[i]) {
-                            position[i] = maxRange[i];
+                            position[i] = maxRange[i]-(position[i]- maxRange[i]);
+                            velocity[i] /= 2;
                         }
                     }
-
                     double fitness = f(position);
+                    //std::cout << int(this) << " : pos: " << position[0] << " " << position[1] << " fitness: " << fitness << std::endl;
                     if (fitness < bestFitness) {
                         bestFitness = fitness;
                         bestPosition = position;
