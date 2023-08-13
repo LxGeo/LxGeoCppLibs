@@ -21,6 +21,136 @@ namespace LxGeo
 			all_touched = 1 << 4
 		};
 
+		template <typename values_type> class RasterPixelsStitcher;
+
+		template <typename values_type>
+		class elementary_pixel_reader {
+
+			typedef RasterPixelsStitcher<values_type> RasterPixelsStitcher;
+
+		public:
+			RasterPixelsStitcher& rps;
+			const ElementaryStitchOptions& options;
+			std::function<void(Elementary_Pinned_Pixels_Boost_Point_2<values_type>&)> load_functor;
+
+		public:
+			// constructor
+			elementary_pixel_reader(RasterPixelsStitcher& _rps, const ElementaryStitchOptions& _options)
+				: rps(_rps), options(_options) {
+				/*switch (options.strategy) {
+				case ElementaryStitchStrategy::unique:
+					load_functor = *read_unique;
+					break;
+				case ElementaryStitchStrategy::spatial_buffered:
+					load_functor = read_spatial_buffered;
+					break;
+				case ElementaryStitchStrategy::pixel_buffered:
+					load_functor = read_pixel_buffered;
+					break;
+				case ElementaryStitchStrategy::corner_area:
+					load_functor = NULL;
+					break;
+				default:
+					throw std::runtime_error("Choose strategy from ElementaryStitchOptions!");
+				}*/
+			};
+
+			void read_unique(Elementary_Pinned_Pixels_Boost_Point_2<values_type>& p) {
+				cv::Point pt_pixel_coord;
+				rps.ref_raster.get_pixel_coords(p, pt_pixel_coord);
+				p.pinned_pixel.push_back(rps.safe_pixel_read<values_type>(pt_pixel_coord));
+			}
+
+			void read_spatial_buffered(Elementary_Pinned_Pixels_Boost_Point_2<values_type>& p) {
+				cv::Point min_pixel_corner, max_pixel_corner;
+				rps.ref_raster.get_pixel_coords(p - options.spa_left_up_pt, min_pixel_corner);
+				rps.ref_raster.get_pixel_coords(p + options.spa_right_down_pt, max_pixel_corner);
+				p.pinned_pixel.splice(p.pinned_pixel.end(), rps.readBoxPixels(min_pixel_corner.x, min_pixel_corner.y, max_pixel_corner.x, max_pixel_corner.y));
+			}
+
+			void read_pixel_buffered(Elementary_Pinned_Pixels_Boost_Point_2<values_type>& p) {
+				cv::Point min_pixel_corner, max_pixel_corner;
+				rps.ref_raster.get_pixel_coords(p, min_pixel_corner);
+				rps.ref_raster.get_pixel_coords(p, max_pixel_corner);
+				p.pinned_pixel.splice(p.pinned_pixel.end(),
+					rps.readBoxPixels(
+						min_pixel_corner.x - options.pix_left_up_pt.get<0>(), min_pixel_corner.y - options.pix_left_up_pt.get<1>(),
+						max_pixel_corner.x + options.pix_right_down_pt.get<0>(), max_pixel_corner.y + options.pix_right_down_pt.get<1>()
+					)
+				);
+			}
+
+			std::list<values_type> readCornerPixels(const Inexact_Point_2& p_before, const Inexact_Point_2& p_mid, const Inexact_Point_2& p_after, bool CCW, const ElementaryStitchOptions& options) {
+
+				bool is_outer_angle = CGAL::left_turn(p_before, p_mid, p_after);
+				if (!CCW) is_outer_angle = !is_outer_angle;
+
+				// limiting inner search
+				auto pt_before_limit_step_vector = Inexact_Vector_2(p_mid, p_before);
+				pt_before_limit_step_vector /= vmax(
+					vmax(1, abs(pt_before_limit_step_vector.x()) / options.spa_left_up_pt.get<0>()),
+					vmax(1, abs(pt_before_limit_step_vector.y()) / options.spa_left_up_pt.get<1>())
+				);
+				auto pt_after_limit_step_vector = Inexact_Vector_2(p_mid, p_after);
+				pt_after_limit_step_vector /= vmax(
+					vmax(1, abs(pt_after_limit_step_vector.x()) / options.spa_left_up_pt.get<0>()),
+					vmax(1, abs(pt_after_limit_step_vector.y()) / options.spa_left_up_pt.get<1>())
+				);
+
+				//continue here
+				Inexact_Vector_2 extremities_vector(p_mid + pt_before_limit_step_vector, p_mid + pt_after_limit_step_vector);
+				auto centripetal_vector = extremities_vector.perpendicular(CGAL::Orientation::CLOCKWISE);
+				Inexact_Point_2 inner_mid_point = p_mid + centripetal_vector;
+				/*
+				int search_sign = is_outer_angle ? -1 : 1;
+				auto inner_mid_point = p_mid + search_sign*(pt_before_limit_step_vector + pt_after_limit_step_vector);
+				*/
+				Structural_Pinned_Pixels_Boost_Polygon_2<values_type> corner_polygon;
+				bg::append(corner_polygon.outer(), transform_C2B_Point(p_mid));
+				bg::append(corner_polygon.outer(), transform_C2B_Point(p_mid + pt_before_limit_step_vector));
+				bg::append(corner_polygon.outer(), transform_C2B_Point(inner_mid_point));
+				bg::append(corner_polygon.outer(), transform_C2B_Point(p_mid + pt_after_limit_step_vector));
+				bg::append(corner_polygon.outer(), transform_C2B_Point(p_mid));
+
+				//std::cout << std::setprecision(12) << bg::wkt(corner_polygon) << std::endl;
+
+				rps.readStructrualPixels(corner_polygon);
+				return corner_polygon.outer_pinned_pixel;
+			}
+
+			void readCornerPixels(Elementary_Pinned_Pixels_Boost_Point_2<values_type>& p_mid,
+				const Boost_Point_2& p_before, const Boost_Point_2& p_after, bool CCW,
+				const ElementaryStitchOptions& options) {
+				p_mid.pinned_pixel.splice(p_mid.pinned_pixel.end(), readCornerPixels(
+					transform_B2C_Point(p_before),
+					transform_B2C_Point(p_mid),
+					transform_B2C_Point(p_after),
+					CCW,
+					options)
+				);
+			}
+
+			template <typename values_type>
+			void operator()(const Elementary_Pinned_Pixels_Boost_Point_2<values_type>& p)
+			{
+				//load_functor(p);
+				switch (options.strategy) {
+				case ElementaryStitchStrategy::unique:
+					load_functor = *read_unique;
+					break;
+				case ElementaryStitchStrategy::spatial_buffered:
+					load_functor = read_spatial_buffered;
+					break;
+				case ElementaryStitchStrategy::pixel_buffered:
+					load_functor = read_pixel_buffered;
+					break;
+				default:
+					throw std::runtime_error("Choose strategy from ElementaryStitchOptions!");
+				}
+			}
+
+		};
+
 
 		template <typename values_type>
 		class RasterPixelsStitcher {
@@ -74,7 +204,7 @@ namespace LxGeo
 			void readElementaryPixels(Elementary_Pinned_Pixels_Boost_Polygon_2<values_type>&c_polygon, const ElementaryStitchOptions & options) {
 
 
-				auto epr = elementary_pixel_reader<values_type>(*this, options);
+				elementary_pixel_reader<values_type> epr(*this, options);
 
 				auto ring_pts_geometry_aware_pixel_reader = [&](auto& c_ring, bool is_outer_ring=true)
 				{
@@ -242,134 +372,7 @@ namespace LxGeo
 
 		};
 
-		template <typename values_type>
-		class elementary_pixel_reader {
-			
-			typedef RasterPixelsStitcher<values_type> RasterPixelsStitcher;
-
-		public:
-			RasterPixelsStitcher& rps;
-			ElementaryStitchOptions& options;
-			std::function<void(Elementary_Pinned_Pixels_Boost_Point_2<values_type>&)> load_functor;
-
-		public:
-			// constructor
-			elementary_pixel_reader(RasterPixelsStitcher& _rps, ElementaryStitchOptions& _options)
-				: rps(_rps), options(_options) {
-				/*switch (options.strategy) {
-				case ElementaryStitchStrategy::unique:
-					load_functor = *read_unique;
-					break;
-				case ElementaryStitchStrategy::spatial_buffered:
-					load_functor = read_spatial_buffered;
-					break;
-				case ElementaryStitchStrategy::pixel_buffered:
-					load_functor = read_pixel_buffered;
-					break;
-				case ElementaryStitchStrategy::corner_area:
-					load_functor = NULL;
-					break;
-				default:
-					throw std::runtime_error("Choose strategy from ElementaryStitchOptions!");
-				}*/
-			};
-
-			void read_unique(Elementary_Pinned_Pixels_Boost_Point_2<values_type>& p) {
-				cv::Point pt_pixel_coord;
-				rps.ref_raster.get_pixel_coords(p, pt_pixel_coord);
-				p.pinned_pixel.push_back(rps.safe_pixel_read<values_type>(pt_pixel_coord));
-			}
-
-			void read_spatial_buffered(Elementary_Pinned_Pixels_Boost_Point_2<values_type>& p) {
-				cv::Point min_pixel_corner, max_pixel_corner;
-				rps.ref_raster.get_pixel_coords(p - options.spa_left_up_pt, min_pixel_corner);
-				rps.ref_raster.get_pixel_coords(p + options.spa_right_down_pt, max_pixel_corner);
-				p.pinned_pixel.splice(p.pinned_pixel.end(), rps.readBoxPixels(min_pixel_corner.x, min_pixel_corner.y, max_pixel_corner.x, max_pixel_corner.y));
-			}
-
-			void read_pixel_buffered(Elementary_Pinned_Pixels_Boost_Point_2<values_type>& p) {
-				cv::Point min_pixel_corner, max_pixel_corner;
-				rps.ref_raster.get_pixel_coords(p, min_pixel_corner);
-				rps.ref_raster.get_pixel_coords(p, max_pixel_corner);
-				p.pinned_pixel.splice(p.pinned_pixel.end(),
-					rps.readBoxPixels(
-						min_pixel_corner.x - options.pix_left_up_pt.get<0>(), min_pixel_corner.y - options.pix_left_up_pt.get<1>(),
-						max_pixel_corner.x + options.pix_right_down_pt.get<0>(), max_pixel_corner.y + options.pix_right_down_pt.get<1>()
-					)
-				);
-			}
-			
-			std::list<values_type> readCornerPixels(const Inexact_Point_2& p_before, const Inexact_Point_2& p_mid, const Inexact_Point_2& p_after, bool CCW, ElementaryStitchOptions& options) {
-
-				bool is_outer_angle = CGAL::left_turn(p_before, p_mid, p_after);
-				if (!CCW) is_outer_angle = !is_outer_angle;
-
-				// limiting inner search
-				auto pt_before_limit_step_vector = Inexact_Vector_2(p_mid, p_before);
-				pt_before_limit_step_vector /= vmax(
-					vmax(1, abs(pt_before_limit_step_vector.x())/ options.spa_left_up_pt.get<0>()),
-					vmax(1, abs(pt_before_limit_step_vector.y())/ options.spa_left_up_pt.get<1>())
-					);
-				auto pt_after_limit_step_vector = Inexact_Vector_2(p_mid, p_after);
-				pt_after_limit_step_vector /= vmax(
-					vmax(1, abs(pt_after_limit_step_vector.x())/ options.spa_left_up_pt.get<0>()),
-					vmax(1, abs(pt_after_limit_step_vector.y())/ options.spa_left_up_pt.get<1>())
-					);
-
-				//continue here
-				Inexact_Vector_2 extremities_vector(p_mid + pt_before_limit_step_vector, p_mid + pt_after_limit_step_vector);
-				auto centripetal_vector = extremities_vector.perpendicular(CGAL::Orientation::CLOCKWISE);
-				Inexact_Point_2 inner_mid_point = p_mid + centripetal_vector;
-				/*
-				int search_sign = is_outer_angle ? -1 : 1;
-				auto inner_mid_point = p_mid + search_sign*(pt_before_limit_step_vector + pt_after_limit_step_vector);
-				*/
-				Structural_Pinned_Pixels_Boost_Polygon_2<values_type> corner_polygon;
-				bg::append(corner_polygon.outer(), transform_C2B_Point(p_mid));
-				bg::append(corner_polygon.outer(), transform_C2B_Point(p_mid + pt_before_limit_step_vector));
-				bg::append(corner_polygon.outer(), transform_C2B_Point(inner_mid_point));
-				bg::append(corner_polygon.outer(), transform_C2B_Point(p_mid + pt_after_limit_step_vector));
-				bg::append(corner_polygon.outer(), transform_C2B_Point(p_mid));
-
-				//std::cout << std::setprecision(12) << bg::wkt(corner_polygon) << std::endl;
-				
-				rps.readStructrualPixels(corner_polygon);
-				return corner_polygon.outer_pinned_pixel;
-			}
-
-			void readCornerPixels(Elementary_Pinned_Pixels_Boost_Point_2<values_type>& p_mid,
-				const Boost_Point_2& p_before, const Boost_Point_2& p_after, bool CCW, 
-				ElementaryStitchOptions& options) {
-				p_mid.pinned_pixel.splice(p_mid.pinned_pixel.end(), readCornerPixels(
-					transform_B2C_Point(p_before),
-					transform_B2C_Point(p_mid),
-					transform_B2C_Point(p_after),
-					CCW,
-					options)
-				);
-			}
-
-			template <typename values_type>
-			void operator()(const Elementary_Pinned_Pixels_Boost_Point_2<values_type>& p)
-			{
-				//load_functor(p);
-				switch (options.strategy) {
-				case ElementaryStitchStrategy::unique:
-					load_functor = *read_unique;
-					break;
-				case ElementaryStitchStrategy::spatial_buffered:
-					load_functor = read_spatial_buffered;
-					break;
-				case ElementaryStitchStrategy::pixel_buffered:
-					load_functor = read_pixel_buffered;
-					break;
-				default:
-					throw std::runtime_error("Choose strategy from ElementaryStitchOptions!");
-				}
-			}
-
-		};
-
+		
 	
 	}
 }
