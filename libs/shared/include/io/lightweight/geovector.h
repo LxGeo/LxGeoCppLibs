@@ -160,6 +160,8 @@ namespace LxGeo
 
 				GeoVector loaded_gvec;
 				auto vector_dataset = load_gdal_vector_dataset_shared_ptr(in_file);
+				VProfile vector_dataset_profile = VProfile::from_gdal_dataset(vector_dataset);
+				loaded_gvec.crs_wkt = vector_dataset_profile.s_crs_wkt;
 
 				OGRLayer* to_load_layer;
 				if (!layer_name.empty()) {
@@ -177,6 +179,7 @@ namespace LxGeo
 					}
 				}
 
+				// TODO: code uncesseray below as layer def is already loaded using VPROFILE
 				LayerDef layer_definition = LayerDef::from_ogr_layer(to_load_layer);
 				OGRPolygon spatial_filter_ogr = transform_B2OGR_Polygon(spatial_filter);
 				if (!spatial_filter_ogr.IsEmpty())
@@ -321,15 +324,15 @@ namespace LxGeo
 
 			}
 
-			void to_file(const std::string& out_file, const OGRSpatialReference* spatial_refrence = nullptr) {
+			void to_file(const std::string& out_file, const OGRSpatialReference* enforce_spatial_refrence = nullptr) {
 				if (geometries_container.empty()) {
 					std::cout << "Empty Geovector! No file saved!" << std::endl;
 					return;
 				}
-				std::string s_crs_wkt = "";
-				if (spatial_refrence) {
+				std::string s_crs_wkt(crs_wkt);
+				if (enforce_spatial_refrence) {
 					char* pszWKT = NULL;
-					spatial_refrence->exportToWkt(&pszWKT);
+					enforce_spatial_refrence->exportToWkt(&pszWKT);
 					s_crs_wkt = std::string(pszWKT);
 				}
 				std::string out_layer_name = "";
@@ -359,6 +362,7 @@ namespace LxGeo
 
 		public:
 			std::vector<Geometries_with_attributes<geom_type>> geometries_container;
+			std::string crs_wkt;
 
 		};
 
