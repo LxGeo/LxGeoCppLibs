@@ -103,6 +103,38 @@ namespace LxGeo
 			return simplified_polygon;
 		}
 
+		enum LineStringFixStrategy {
+			remove_consecutive_redundant_pts = 0,
+		};
+
+		template <typename linestringType>
+		linestringType fix_linestring_geometry(const linestringType& linestring, LineStringFixStrategy strategy=LineStringFixStrategy::remove_consecutive_redundant_pts) {
+			using PointType = typename LineStringTrait<linestringType>::PointType;
+			
+			if (strategy == LineStringFixStrategy::remove_consecutive_redundant_pts) {
+				std::list<PointType> remaining_points;
+				int counter = 0;
+				for (const auto& c_pt : LineStringTrait<linestringType>::getPoints(linestring)) {
+					if (counter == 0) { remaining_points.push_back(c_pt); counter++; continue; }
+					// check if point is same
+					double x1 = PointTraits<PointType>::getX(c_pt);
+					double y1 = PointTraits<PointType>::getX(c_pt);
+					double x2 = PointTraits<PointType>::getX(remaining_points.back());
+					double y2 = PointTraits<PointType>::getX(remaining_points.back());
+					double xdiff = abs(x1 - x2);
+					double ydiff = abs(y1 - y2);
+					if (xdiff < 1e-6 && ydiff < 1e-6) continue;
+					else remaining_points.push_back(c_pt);
+					counter++;
+				}
+				linestringType fixed_linestring = LineStringTrait<linestringType>::create(remaining_points.begin(), remaining_points.end());
+				return fixed_linestring;
+			}
+			else {
+				throw std::domain_error("Only remove_consecutive_redundant_pts strategy is implemented!");
+			}
+		}
+
 		LX_GEO_FACTORY_SHARED_API double max_distance_between_lines(const Inexact_Point_2& p1,
 			const Inexact_Point_2& p2,
 			const Inexact_Point_2& p3,
