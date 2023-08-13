@@ -272,7 +272,7 @@ namespace LxGeo
 			}
 			GDALDataset* dst = (GDALDataset*)GDALOpenEx(vector_file_path.c_str(), GDAL_OF_VECTOR | extra_flags, NULL, NULL, NULL);
 			if (dst == NULL) {
-				auto err_msg = "Unable to open raster dataset in read mode from file " + vector_file_path;
+				auto err_msg = "Unable to open vector dataset in read mode from file " + vector_file_path;
 				throw std::runtime_error(err_msg.c_str());
 			}
 			return std::shared_ptr<GDALDataset>(dst, GDALClose);
