@@ -337,6 +337,51 @@ namespace LxGeo
 
 		};
 
+		template <typename LineStringT>
+		struct LineStringTrait {
+
+			using PointType = typename LineStringT::PointType;
+			using LineStringType = LineStringT;
+
+			static PointType getPointAt(const LineStringType& linestring, int idx) {};
+
+			static std::vector<PointType> getPoints(const LineStringType& linestring) {};
+
+			static size_t length(const LineStringType& linestring) {};
+
+			template <typename Iter>
+			static LineStringType create(const Iter& begin, const Iter& end) {};
+
+		};
+
+		template<typename PointTypeT>
+		struct LineStringTrait< bg::model::linestring<PointTypeT> > {
+
+			using PointType = typename PointTypeT;
+			using LineStringType = bg::model::linestring<PointType>;
+
+			static PointType getPointAt(const LineStringType& linestring, int idx) {
+				return linestring.at(idx);
+			};
+
+			static std::vector<PointType> getPoints(const LineStringType& linestring) {
+				std::vector<PointType> points(linestring.begin(), linestring.end());
+				return points;
+			};
+
+			static size_t length(const LineStringType& linestring) {
+				return linestring.size();
+			};
+
+			template <typename Iter>
+			static LineStringType create(const Iter& begin, const Iter& end) {
+				return LineStringType(begin, end);
+			};
+
+		};
+
+
+
 		template <typename env_type>
 		struct envelopeGet {
 			const env_type* env;
