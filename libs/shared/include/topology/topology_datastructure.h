@@ -45,5 +45,20 @@ namespace LxGeo
 			return arr;
 		}
 
+		template <std::ranges::input_range Range>
+		Arrangement ArrangmentFromLineStrings(const Range& gwas_container) {
+			Arrangement arr;
+			for (const auto& c_gwa : gwas_container) {
+				auto& c_linestring = c_gwa.get_definition();
+				auto c_line_vertex_it = c_linestring.begin();
+				auto prev = c_line_vertex_it;
+				for (++c_line_vertex_it; c_line_vertex_it != c_linestring.end(); ++c_line_vertex_it) {
+					Segment c_edge(Point(prev->get<0>(), prev->get<1>()), Point(c_line_vertex_it->get<0>(), c_line_vertex_it->get<1>()));					
+					CGAL::insert(arr, c_edge);					
+					prev = c_line_vertex_it;
+				}
+			}
+			return arr;
+		}
 	}
 }
