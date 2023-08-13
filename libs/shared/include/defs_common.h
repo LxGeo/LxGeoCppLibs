@@ -121,6 +121,13 @@ namespace LxGeo
 			static double getY(const Inexact_Point_2& point) { return point.y(); }
 		};
 
+		// Specialization for CGAL Point
+		template <>
+		struct PointTraits<Point_2> {
+			static double getX(const Point_2& point) { return CGAL::to_double(point.x()); }
+			static double getY(const Point_2& point) { return CGAL::to_double(point.y()); }
+		};
+
 		// Specialization for OGRPoint
 		template <>
 		struct PointTraits<OGRPoint> {
