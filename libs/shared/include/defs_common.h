@@ -416,5 +416,29 @@ namespace LxGeo
 			return output_envelope;
 		}
 
+		template <typename PointT>
+		double inner_angle(const PointT& p0, const PointT& p1, const PointT& p2) {
+
+			double angle = 0.0;
+
+			double BAx = PointTraits<PointT>::getX(p0) - PointTraits<PointT>::getX(p1);
+			double BAy = PointTraits<PointT>::getY(p0) - PointTraits<PointT>::getY(p1);
+			double BCx = PointTraits<PointT>::getX(p2) - PointTraits<PointT>::getX(p1);
+			double BCy = PointTraits<PointT>::getY(p2) - PointTraits<PointT>::getY(p1);
+
+			double dotProduct = BAx * BCx + BAy * BCy;
+			double magnitudeBA = std::sqrt(BAx * BAx + BAy * BAy);
+			double magnitudeBC = std::sqrt(BCx * BCx + BCy * BCy);
+
+			if (magnitudeBA > 0 && magnitudeBC > 0)
+			{
+				double cosTheta = dotProduct / (magnitudeBA * magnitudeBC);
+				angle = std::acos(cosTheta);
+			}
+
+			return angle;
+			
+		}
+
 	}
 }
