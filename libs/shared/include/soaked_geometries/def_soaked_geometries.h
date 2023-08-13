@@ -23,6 +23,14 @@ namespace LxGeo
 			std::vector<ring_boundary_soak<cv_mat_type>> inner_rings_soak;
 		};
 
+		template <typename cv_mat_type>
+		class Composed_Soacked_Pixels_Boost_Polygon_2 {
+		public:
+			Boost_Polygon_2 polygon;
+			ring_boundary_soak<cv_mat_type> outer_ring_soak;
+			std::vector<ring_boundary_soak<cv_mat_type>> inner_rings_soak;
+		};
+
 
 	}
 }
