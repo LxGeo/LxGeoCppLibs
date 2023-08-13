@@ -360,6 +360,12 @@ namespace LxGeo
 				return geometries_container.end();
 			}
 
+			void apply_transform(std::function<geom_type(const geom_type&)> geom_transformer) {
+				for (Geometries_with_attributes<geom_type>& c_gwa : geometries_container) {
+					c_gwa.set_definition(geom_transformer(c_gwa.get_definition()));
+				}
+			}
+
 		public:
 			std::vector<Geometries_with_attributes<geom_type>> geometries_container;
 			std::string crs_wkt;
@@ -372,6 +378,41 @@ namespace LxGeo
 			for (const Geometries_with_attributes<in_geom_type>& gwa : in_geovector.geometries_container) {
 				out_geovector.add_geometry(transformer_fn(gwa));
 			}
+			out_geovector.init_rtree();
+		}
+
+		template <typename in_geom_type, typename out_geom_type>
+		void unpool_geovector(const GeoVector<in_geom_type>& in_geovector, GeoVector<out_geom_type>& out_geovector,
+			const std::function<std::list<Geometries_with_attributes<out_geom_type>>(const Geometries_with_attributes<in_geom_type>&)>& transformer_fn) {
+			for (const Geometries_with_attributes<in_geom_type>& gwa : in_geovector.geometries_container) {
+				auto children_geoms = transformer_fn(gwa);
+				for (const auto& child: children_geoms)
+					out_geovector.add_geometry(child);
+			}
+			out_geovector.crs_wkt = in_geovector.crs_wkt;
+			out_geovector.init_rtree();
+		}
+
+		template <typename in_geom_type, typename out_geom_type>
+		void pool_geovector(const GeoVector<in_geom_type>& in_geovector, GeoVector<out_geom_type>& out_geovector,
+			std::function<Geometries_with_attributes<out_geom_type> (std::list<Geometries_with_attributes<in_geom_type>>&)> transformer_fn) {
+			
+			// map of parent idx and value as a list of children
+			std::map<size_t, std::list<Geometries_with_attributes<out_geom_type>>> hierarchy_map;
+
+			for (const Geometries_with_attributes<in_geom_type>& gwa : in_geovector.geometries_container) {
+				size_t pid = gwa.get_int_attribute("pid");
+				if (hierarchy_map.find(pid) == hierarchy_map.end())
+					hierarchy_map[pid] = { gwa };
+				else
+					hierarchy_map[pid].push_back(gwa);
+			}
+			for (auto& entry : hierarchy_map) {
+				auto pooled_geom = transformer_fn(entry.second);
+				pooled_geom.set_int_attribute(out_geovector.ID_FIELD_NAME, entry.first);
+				out_geovector.add_geometry(pooled_geom);
+			}
+			out_geovector.crs_wkt = in_geovector.crs_wkt;
 			out_geovector.init_rtree();
 		}
 
