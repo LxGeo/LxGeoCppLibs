@@ -309,6 +309,22 @@ namespace LxGeo
 
 			std::vector<Boost_LineString_2> fill_linestring_container() {
 				std::vector<Boost_LineString_2> loaded_linestring;
+
+				loaded_linestring.reserve(feature_count);
+				vector_layer->ResetReading();
+				for (size_t j = 0; j < feature_count; ++j) {
+					OGRFeature* feat = vector_layer->GetNextFeature();
+					if (feat == NULL) continue;
+
+					OGRGeometry* geom = feat->GetGeometryRef();
+
+					// Assumes the shapefile only contains OGRLineString
+					if (OGRLineString* P = dynamic_cast<OGRLineString*>(geom)) {
+						loaded_linestring.push_back(transform_OGR2B_Linestring(P));
+					}
+				}
+				loaded_linestring.shrink_to_fit();
+
 				return loaded_linestring;
 			}
 
