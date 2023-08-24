@@ -14,6 +14,7 @@
 
 namespace LxGeo
 {
+    using namespace IO_DATA;
 	namespace GeometryFactoryShared
 	{
 		typedef CGAL::Cartesian<double> Kernel;
@@ -258,10 +259,10 @@ namespace LxGeo
                 for (auto c_edge = arr.edges_begin(); c_edge != arr.edges_end(); c_edge++) {
                     auto& edge_data = c_edge->curve().data().front();
                     auto source_v = c_edge->source();
-                    if (!filter_predicate(source_v))
+                    auto target_v = c_edge->target();
+                    if (!filter_predicate(source_v) && !filter_predicate(target_v))
                         continue;
                     std::pair<double, double> source_disp = (displacement_map.empty()) ? std::make_pair<double,double>(0,0) : displacement_map[source_v];
-                    auto target_v = c_edge->target();
                     std::pair<double, double> target_disp = (displacement_map.empty()) ? std::make_pair<double, double>(0, 0) : displacement_map[target_v];
                     Geometries_with_attributes<Boost_LineString_2> c_gwa;
                     Boost_LineString_2 c_geom;

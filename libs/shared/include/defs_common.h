@@ -477,7 +477,7 @@ namespace LxGeo
 
 			if (magnitudeBA > 0 && magnitudeBC > 0)
 			{
-				double cosTheta = dotProduct / (magnitudeBA * magnitudeBC);
+				double cosTheta = min(1.0, dotProduct / (magnitudeBA * magnitudeBC));
 				angle = std::acos(cosTheta);
 			}
 
