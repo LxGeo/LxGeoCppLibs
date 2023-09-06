@@ -35,6 +35,10 @@ namespace LxGeo
 			return Boost_Point_2(cgal_point.x(), cgal_point.y());
 		};
 
+		Boost_Point_2 transform_C2B_Point(const Point_2& cgal_point) {
+			return Boost_Point_2(CGAL::to_double(cgal_point.x()), CGAL::to_double(cgal_point.y()));
+		};
+
 		void container_transform_B2C_Points(std::vector<Boost_Point_2>& input_container, std::vector<Inexact_Point_2>& output_container) {
 			assert(output_container.empty());
 			output_container.reserve(input_container.size());

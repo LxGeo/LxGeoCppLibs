@@ -15,6 +15,8 @@ namespace LxGeo
 
 		LX_GEO_FACTORY_SHARED_API Boost_Point_2 transform_C2B_Point(const Inexact_Point_2& cgal_point);
 
+		LX_GEO_FACTORY_SHARED_API Boost_Point_2 transform_C2B_Point(const Point_2& cgal_point);
+
 		LX_GEO_FACTORY_SHARED_API void container_transform_B2C_Points(std::vector<Boost_Point_2>& input_container, std::vector<Inexact_Point_2>& output_container);
 
 		LX_GEO_FACTORY_SHARED_API void container_transform_OGRRING2vector_Points(OGRLinearRing* input_ring, std::vector<Inexact_Point_2>& output_vector);
