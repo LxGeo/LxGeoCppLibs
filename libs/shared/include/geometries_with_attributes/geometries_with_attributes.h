@@ -6,6 +6,7 @@ namespace LxGeo
 {
 	namespace GeometryFactoryShared
 	{
+		namespace bg = boost::geometry;
 		template <typename T>
 		class Geometries_with_attributes
 		{

@@ -76,7 +76,8 @@ namespace LxGeo
 					wkb_type = wkbLineString;
 				}
 				else {
-					static_assert(false); //only point,linestring,polygon is implemented
+					throw std::runtime_error("only point,linestring,polygon is implemented");
+					//static_assert(false); //only point,linestring,polygon is implemented
 				}
 
 				try {

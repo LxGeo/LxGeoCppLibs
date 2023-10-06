@@ -364,6 +364,7 @@ namespace LxGeo
 				for (Geometries_with_attributes<geom_type>& c_gwa : geometries_container) {
 					c_gwa.set_definition(geom_transformer(c_gwa.get_definition()));
 				}
+				init_rtree();
 			}
 
 		public:

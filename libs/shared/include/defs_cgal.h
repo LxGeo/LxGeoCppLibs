@@ -12,6 +12,7 @@
 //#include <CGAL/Quadtree.h>
 #include <boost/multiprecision/gmp.hpp>
 #include <CGAL/IO/WKT.h>
+#include <CGAL/number_utils.h>
 namespace LxGeo
 {
 	namespace GeometryFactoryShared
