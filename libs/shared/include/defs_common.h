@@ -49,6 +49,8 @@ namespace LxGeo
 
 		LX_GEO_FACTORY_SHARED_API void transform_CV2G_affine(const cv::Mat& affine_matrix, double outtransform[6]);
 
+		LX_GEO_FACTORY_SHARED_API Inexact_Segment_2 transform_B2C_Segment(const Boost_Segment_2& in_segment);
+
 		template <typename ogr_geom_type, typename boost_geom_type>
 		boost_geom_type transform_OGR2B_geometry(ogr_geom_type* in_geometry) {			
 
@@ -445,6 +447,7 @@ namespace LxGeo
 			}
 		};
 
+		using namespace std;
 		template <typename env_type_1, typename env_type_2>
 		void merge_bounds(const env_type_1& env1, env_type_2& env2) {
 			envelopeGetSet(&env2).setMinX(min(envelopeGetSet(&env2).getMinX(), envelopeGetSet(&env1).getMinX()));

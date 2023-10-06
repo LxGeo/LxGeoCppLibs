@@ -120,6 +120,10 @@ namespace LxGeo
 			return Boost_Point_2(ogr_point->getX(), ogr_point->getY());
 		}
 
+		Inexact_Segment_2 transform_B2C_Segment(const Boost_Segment_2& in_segment) {
+			return Inexact_Segment_2(transform_B2C_Point(in_segment.first), transform_B2C_Point(in_segment.second));
+		}
+
 		double angle3p(const Boost_Point_2& p_m, const Boost_Point_2& p_0, const Boost_Point_2& p_1) {
 
 			double m0x = p_0.get<0>() - p_m.get<0>(), m0y = p_0.get<1>() - p_m.get<1>(),
