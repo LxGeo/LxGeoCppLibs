@@ -137,6 +137,12 @@ namespace LxGeo
 
 		LX_GEO_FACTORY_SHARED_API std::shared_ptr<GDALDataset> load_gdal_vector_dataset_shared_ptr(const std::string& vector_file_path, int extra_flags=0);
 
+		inline bool endswith(std::string const& value, std::string const& ending)
+		{
+			if (ending.size() > value.size()) return false;
+			return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+		}
+
 		enum WriteMode
 		{
 			create = 0, // Create dataset from void
